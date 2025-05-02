@@ -66,6 +66,7 @@ export default function CustomerManagementPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
     const { user } = useAuth();
+
     useEffect(() => {
         setLocalData(data);
     }, [data]);
@@ -130,7 +131,10 @@ export default function CustomerManagementPage() {
                         Swal.fire('Error!', 'No se encontró el ID de usuario en la sesión.', 'error');
                         return;
                     }
-
+                    console.log(`VALORES DE ELIMINACION:
+                        ID AFILIACION: ${item.affiliationId}
+                        ID USUARIO LOGUEADO: ${user.id}
+                        `);
                     // Llamada a la API para eliminar la afiliación (hace la petición DELETE al backend)
                     const response = await fetch(`${urlBase}/affiliations`, {
                         method: 'DELETE',
@@ -138,8 +142,10 @@ export default function CustomerManagementPage() {
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            affiliationId: item.affiliationId,  // Asegúrate de tener estos valores en el item
-                            userId: user.id, // Usamos el id del usuario
+                            
+                            affiliationId: item.affiliationId,
+                            clientId: item.clientId,
+                            userId: user.id,
                         }),
                     });
 

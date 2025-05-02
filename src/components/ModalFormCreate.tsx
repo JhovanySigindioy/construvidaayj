@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 import { DataClient } from "../types/dataClient";
 import { useLists } from "../context/ListsContext";
 import { urlBase } from "../globalConfig/config";
+import { useAuth } from "../context/AuthContext"; // Importa el hook useAuth
 
 interface ModalFormCreateProps {
     isOpen: boolean;
@@ -29,6 +30,8 @@ export default function ModalFormCreate({ isOpen, onClose, refetch }: ModalFormC
         office_id: localStorage.getItem('selectedOffice') || undefined, // Obtener officeId del localStorage al inicio
     });
 
+    const { user } = useAuth(); // Utiliza el hook useAuth para acceder al usuario
+
     useEffect(() => {
         if (error) {
             Swal.fire({
@@ -46,6 +49,15 @@ export default function ModalFormCreate({ isOpen, onClose, refetch }: ModalFormC
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        if (!user?.id) { // Verifica si el usuario y su ID existen
+            Swal.fire({
+                title: "Error de autenticación",
+                text: "No se pudo obtener la información del usuario.",
+                icon: "error",
+            });
+            return;
+        }
 
         const result = await Swal.fire({
             title: "¿Estás seguro?",
@@ -78,10 +90,29 @@ export default function ModalFormCreate({ isOpen, onClose, refetch }: ModalFormC
                 throw new Error("No se encontró el ID de la oficina.");
             }
 
+            // Buscar los IDs correspondientes a los nombres seleccionados
+            const selectedEps = lists!.eps.find(epsItem => epsItem.name === formData.eps);
+            const selectedArl = lists!.arl.find(arlItem => arlItem.name === formData.arl);
+            const selectedCcf = lists!.ccf.find(ccfItem => ccfItem.name === formData.ccf);
+            const selectedPensionFund = lists!.pensionFunds.find(pfItem => pfItem.name === formData.pensionFund);
+
             const payload = {
-                ...formData,
-                office_id: officeId,
+                fullName: formData.fullName,
+                identification: formData.identification,
+                officeId: officeId,
+                userId: user.id, // ¡Aquí obtenemos el userId del contexto!
+                affiliation: {
+                    value: Number(formData.value),
+                    epsId: selectedEps ? selectedEps.id : null,
+                    arlId: selectedArl ? selectedArl.id : null,
+                    ccfId: selectedCcf ? selectedCcf.id : null,
+                    pensionFundId: selectedPensionFund ? selectedPensionFund.id : null,
+                    risk: formData.risk,
+                    observation: formData.observation,
+                },
             };
+
+            console.log('Payload enviado:', payload);
 
             const response = await fetch(`${urlBase}/clients-and-affiliations`, {
                 method: "POST",

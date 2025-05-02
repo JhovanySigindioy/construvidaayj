@@ -33,6 +33,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setIsAuthenticated(false);
         localStorage.removeItem("user");
         localStorage.removeItem("selectedOffice");
+        localStorage.removeItem("lists");
          // Eliminamos el usuario del localStorage
     };
 

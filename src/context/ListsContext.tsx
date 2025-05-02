@@ -29,6 +29,7 @@ export function ListsProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    localStorage.removeItem("lists");
     const fetchLists = async () => {
       try {
         const storedLists = localStorage.getItem('lists');
