@@ -1,7 +1,9 @@
 import LoginForm from "../components/login/LoginForm";
 import LoginImage from "../components/login/LoginImage";
 
+
 export default function LoginPage() {
+    
     return (
         <>
             <div className="min-h-screen flex items-center justify-center bg-gray-100 fade-in py-10">

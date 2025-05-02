@@ -29,12 +29,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     // Función para hacer logout
     const logout = () => {
-        setUser(null);
-        setIsAuthenticated(false);
         localStorage.removeItem("user");
         localStorage.removeItem("selectedOffice");
         localStorage.removeItem("lists");
-         // Eliminamos el usuario del localStorage
+        setUser(null);
+        setIsAuthenticated(false);
     };
 
     return (
