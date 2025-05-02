@@ -7,6 +7,7 @@ import { AuthProvider } from './context/AuthContext.tsx'
 import { ListsProvider } from './context/ListsContext.tsx'
 
 createRoot(document.getElementById('root')!).render(
+  // Punto de inicio de la aplicaion
   <StrictMode>
     <AuthProvider>
       <ListsProvider>
