@@ -156,15 +156,11 @@ export default function FormModal({ isOpen, onClose, client, refetch }: FormModa
                   name === "value" ? (
                     <input
                       key={name}
-                      type="number"
+                      type="text"
                       name={name}
-                      inputMode="numeric"
+                      inputMode="text"
                       pattern="\d*"
-                      value={formData.value.toLocaleString("es-CO", {
-                        style: "currency",
-                        currency: "COP",
-                        minimumFractionDigits: 0,
-                      })}
+                      value={formData.value}
                       placeholder={placeholder}
                       onChange={handleChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"

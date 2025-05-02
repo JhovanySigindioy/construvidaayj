@@ -8,7 +8,7 @@ export default function Table<T extends Record<string, unknown>>({
   rowActions,
 }: TableProps<T>) {
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto fade-in">
       <table className="min-w-full text-[13px] text-gray-800 shadow-md rounded-lg overflow-hidden bg-white border border-gray-200">
         <thead className="bg-blue-400 text-white">
           <tr>

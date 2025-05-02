@@ -1,5 +1,4 @@
 # Logs
-logs
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -7,10 +6,24 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Directorio de módulos de Node.js
 node_modules
+
+# Directorio de compilación
 dist
-dist-ssr
+build
+
+# Archivos de configuración local y temporales
 *.local
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.cache
+.turbo
+tmp/
+temp/
 
 # Editor directories and files
 .vscode/*
@@ -22,3 +35,36 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Archivos de paquetes y lockfiles
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Varios archivos generados por el sistema operativo y editores
+._*
+.AppleDouble
+.LSOverride
+Icon?
+ehthumbs.db
+desktop.ini
+
+# Archivos de caché de herramientas específicas de React/TypeScript
+.eslintcache
+.prettiercache
+.typescript-cache/
+node_modules/.cache/
+
+# Archivos específicos de Next.js (si estás usando Next.js)
+.next/
+out/
+
+# Archivos específicos de Create React App (si estás usando CRA)
+build/
+
+# Archivos de cobertura (si usas Jest u otra herramienta)
+coverage/
+
+# Documentación generada (si aplicas)
+docs/
+typedoc/
