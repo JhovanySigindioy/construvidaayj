@@ -30,11 +30,11 @@ export default function OfficeSelectPage() {
     // Mostrar loader con SweetAlert2
     Swal.fire({
       title: 'Cargando...',
-      text: 'Verificando afiliación',
+      text: 'Verificando afiliaciónes',
       allowOutsideClick: false,
       allowEscapeKey: false,
       didOpen: () => {
-        Swal.showLoading();
+        Swal.showLoading(null);
       },
     });
 
@@ -45,16 +45,19 @@ export default function OfficeSelectPage() {
           'Authorization': `Bearer ${user.token}`, // Aquí ya tomas el token directo del contexto
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ office_id: officeId, client_id: user.id }),
+        body: JSON.stringify({ office_id: officeId, user_id: user.id }),
       });
 
       const data = await response.json();
 
-      Swal.close();
-
       if (response.ok) {
-        navigate(`/customer_management`);
+        // Agregar un delay de 1 segundo antes de cerrar y navegar
+        setTimeout(() => {
+          Swal.close();
+          navigate(`/customer_management`);
+        }, 800);
       } else {
+        Swal.close();
         Swal.fire('Error', data.message || 'Ocurrió un error al verificar la afiliación.', 'error');
       }
     } catch (error) {
@@ -75,11 +78,19 @@ export default function OfficeSelectPage() {
             className="flex flex-col items-center p-6 border rounded-lg shadow-md hover:shadow-lg cursor-pointer"
             onClick={() => handleSelectOffice(office.office_id)}
           >
-            <img
-              src={office.logo_url || ""}
-              alt={office.name}
-              className="w-24 h-24 object-contain mb-4"
-            />
+            {office.logo_url && (
+              <img
+                src={office.logo_url}
+                alt={office.name}
+                className="w-24 h-24 object-contain mb-4"
+              />
+            )}
+            {!office.logo_url && (
+              <div className="w-24 h-24 flex items-center justify-center bg-gray-200 rounded-lg mb-4">
+                {/* Puedes mostrar un icono o un texto indicando que no hay logo */}
+                <span className="text-gray-500 text-sm">Sin Logo</span>
+              </div>
+            )}
             <h3 className="text-lg font-medium">{office.name}</h3>
             <p className="text-sm text-gray-500">Representante: {office.representative_name}</p>
           </div>

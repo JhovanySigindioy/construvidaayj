@@ -5,6 +5,7 @@ export type DataClient = {
   affiliationId: string;
   fullName: string;
   identification: string;
+  companyName: string;
   value: number;
   eps: string;
   arl: string;
@@ -14,4 +15,6 @@ export type DataClient = {
   paid: PaymentStatus;
   observation: string;
   datePaidReceived: string;
+  phones: string[];
 };
+

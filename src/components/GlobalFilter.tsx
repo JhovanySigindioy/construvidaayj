@@ -10,7 +10,7 @@ export default function GlobalFilter({
 }: GlobalFilterProps) {
   return (
     <div className="relative my-6 mx-4 border border-gray-300 rounded-lg p-1 shadow-sm bg-white w-full md:w-auto">
-      
+
       <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white px-2 text-sm text-gray-600 font-medium">
         Filtrar por
       </span>
@@ -21,7 +21,6 @@ export default function GlobalFilter({
           onChange={(e) => onColumnChange(e.target.value)}
           className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
         >
-          <option value="all">Todas las columnas</option>
           {columnOptions.map((col) => (
             <option key={col.key} value={col.key}>
               {col.label}
