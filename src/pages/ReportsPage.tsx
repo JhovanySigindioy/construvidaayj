@@ -36,6 +36,9 @@ export default function ReportsPage() {
         >
           Volver al Inicio
         </Link>
+        <div>
+         
+        </div>
       </div>
     </div>
   );

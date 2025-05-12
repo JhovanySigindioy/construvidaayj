@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FaBars, FaTimes } from 'react-icons/fa'; // Importa el ícono de salida
+import { FaBars, FaTimes } from 'react-icons/fa';
 import { LuLogOut } from "react-icons/lu";
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
