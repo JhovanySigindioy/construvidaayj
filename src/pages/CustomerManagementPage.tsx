@@ -139,62 +139,98 @@ export default function CustomerManagementPage() {
             confirmButtonText: 'Sí, eliminar',
             cancelButtonText: 'Cancelar'
         }).then(async (result) => {
-            if (result.isConfirmed) {
-                try {
-                    // Obtenemos el usuario desde localStorage y lo parseamos
-                    if (!user || !user.id) {
-                        Swal.fire('Error!', 'No se encontró el ID de usuario en la sesión.', 'error');
-                        return;
+            if (!result.isConfirmed) return;
+
+            if (!user || !user.id) {
+                Swal.fire('Error!', 'No se encontró el ID de usuario en la sesión.', 'error');
+                return;
+            }
+
+            console.log(`VALORES DE ELIMINACION:
+                ID AFILIACION: ${item.affiliationId}
+                ID USUARIO LOGUEADO: ${user.id}
+            `);
+
+            try {
+                // Helper para manejar JSON seguro
+                const safeJson = async (response: Response) => {
+                    const text = await response.text();
+                    try {
+                        return text ? JSON.parse(text) : {};
+                    } catch {
+                        return {};
                     }
-                    console.log(`VALORES DE ELIMINACION:
-                        ID AFILIACION: ${item.affiliationId}
-                        ID USUARIO LOGUEADO: ${user.id}
-                        `);
-                    // Llamada a la API para eliminar la afiliación (hace la petición DELETE al backend)
-                    const response = await fetch(`${urlBase}/affiliations`, {
-                        method: 'DELETE',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
+                };
 
-                            affiliationId: item.affiliationId,
-                            clientId: item.clientId,
-                            userId: user.id,
-                        }),
-                    });
+                // DELETE - eliminar afiliación
+                const deleteResponse = await fetch(`${urlBase}/affiliations`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        affiliationId: item.affiliationId,
+                        userId: user.id,
+                    }),
+                });
 
-                    const data = await response.json();
+                const deleteData = await safeJson(deleteResponse);
 
-                    if (response.ok) {
-                        // Confirmación de éxito
-                        Swal.fire(
-                            'Eliminado!',
-                            `${item.fullName} ha sido eliminado correctamente.`,
-                            'success'
-                        );
-                        // Eliminar el item de la lista localmente
-                        setLocalData((prevClients) =>
-                            prevClients.filter((client) => client.affiliationId !== item.affiliationId)
-                        );
-                    } else {
-                        Swal.fire(
-                            'Error!',
-                            data.message || 'Hubo un error al eliminar la afiliación.',
-                            'error'
-                        );
-                    }
-                } catch (error) {
-                    console.error("Error en la eliminación:", error);
+                if (!deleteResponse.ok) {
                     Swal.fire(
                         'Error!',
-                        'Hubo un problema con la conexión al servidor.',
+                        deleteData.message || 'Hubo un error al eliminar la afiliación.',
                         'error'
                     );
+                    return;
                 }
+
+                // POST - registrar desafiliación
+                const unsubscriptionResponse = await fetch(`${urlBase}/affiliations/unsubscriptions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        clientId: item.clientId,
+                        reason: 'Desafiliación por eliminación',
+                        cost: 0.00,
+                        processedBy: user.id,
+                        observation: 'Desafiliación registrada tras eliminación',
+                    }),
+                });
+
+                const unsubscriptionData = await safeJson(unsubscriptionResponse);
+
+                if (!unsubscriptionResponse.ok) {
+                    Swal.fire(
+                        'Error!',
+                        unsubscriptionData.message || 'Hubo un error al registrar la desafiliación.',
+                        'error'
+                    );
+                    return;
+                }
+
+                // Éxito total
+                Swal.fire(
+                    'Eliminado!',
+                    `${item.fullName} ha sido eliminado correctamente y desafiliado.`,
+                    'success'
+                );
+
+                // Eliminar de la lista local
+                setLocalData((prevClients) =>
+                    prevClients.filter((client) => client.affiliationId !== item.affiliationId)
+                );
+
+            } catch (error) {
+                console.error("Error en la eliminación:", error);
+                Swal.fire(
+                    'Error!',
+                    'Hubo un problema con la conexión al servidor o al procesar la respuesta.',
+                    'error'
+                );
             }
         });
     };
+
+
 
     const handleMonthYearChange = (month: number, year: number) => {
 
