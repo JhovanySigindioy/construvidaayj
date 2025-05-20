@@ -10,7 +10,6 @@ export default function LoginPage() {
                 <div className="w-full max-w-5xl bg-white rounded-xl shadow-lg grid grid-cols-1 md:grid-cols-2 mx-2">
                     <LoginImage />
                     <LoginForm />
-                   
                 </div>
             </div>
           

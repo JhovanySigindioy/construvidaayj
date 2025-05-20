@@ -32,8 +32,9 @@ export default function Navbar() {
                 <ul className="hidden md:flex space-x-6 text-lg items-center">
 
                     <li><Link to="/office_select" className={isActive('/office_select')}>Oficinas</Link></li>
-                    <li><Link to="/customer_management" className={isActive('/customer_management')}>Gestión Clientes</Link></li>
-                     <li><Link to="/reports" onClick={closeMenu} className={isActive('/reports')}>Reportes</Link></li>
+                    <li><Link to="/customer_management" className={isActive('/customer_management')}>Afiliaciones</Link></li>
+                    <li><Link to="/unsubscriptions" className={isActive('/unsubscriptions')}>Retirados</Link></li>
+                    <li><Link to="/reports" onClick={closeMenu} className={isActive('/reports')}>Reportes</Link></li>
                     {isAuthenticated && (
                         <li>
                             <button

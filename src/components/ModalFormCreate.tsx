@@ -12,7 +12,7 @@ interface ModalFormCreateProps {
   refetch?: () => void;
 }
 
-type FormData = Omit<DataClient, 'clientId' | 'affiliationId'> & {
+type FormData = Omit<DataClient, 'clientId' | 'affiliationId' | 'govRegistryCompletedAt'> & {
   companyName: string;
   phones: string[];
   value: number; // Asegúrate de que value sea un número
@@ -24,6 +24,7 @@ type FormData = Omit<DataClient, 'clientId' | 'affiliationId'> & {
   observation: string;
   paid: "Pendiente" | "Pagado"; // Ajusta si tienes más estados
   datePaidReceived: string;
+  govRegistryCompletedAt: string;
 };
 
 export default function ModalFormCreate({ isOpen, onClose, refetch }: ModalFormCreateProps) {
@@ -42,6 +43,7 @@ export default function ModalFormCreate({ isOpen, onClose, refetch }: ModalFormC
     observation: "",
     paid: "Pendiente",
     datePaidReceived: "",
+    govRegistryCompletedAt: "",
     phones: [''], // Inicializamos phones como un array con un string vacío
   });
 
@@ -115,19 +117,21 @@ export default function ModalFormCreate({ isOpen, onClose, refetch }: ModalFormC
       const payload = {
         fullName: formData.fullName,
         identification: formData.identification,
-        companyId: selectedCompany ? selectedCompany.id : null, // Usamos companyId
-        phones: formData.phones, // Enviamos el array de teléfonos
+        companyId: selectedCompany ? selectedCompany.id : null,
+        phones: formData.phones,
         userId: user.id,
-        officeId: officeId, // Aunque no se use directamente para el cliente, puede ser útil para auditoría o contexto
+        officeId: officeId,
         affiliation: {
-          value: Number(formData.value),
-          epsId: selectedEps ? selectedEps.id : null,
-          arlId: selectedArl ? selectedArl.id : null,
-          ccfId: selectedCcf ? selectedCcf.id : null,
-          pensionFundId: selectedPensionFund ? selectedPensionFund.id : null,
-          risk: formData.risk,
-          observation: formData.observation,
-          officeId: officeId, // Asegúrate de enviar el officeId para la afiliación
+            value: Number(formData.value),
+            epsId: selectedEps ? selectedEps.id : null,
+            arlId: selectedArl ? selectedArl.id : null,
+            ccfId: selectedCcf ? selectedCcf.id : null,
+            pensionFundId: selectedPensionFund ? selectedPensionFund.id : null,
+            risk: formData.risk,
+            paid: formData.paid,
+            observation: formData.observation,
+            datePaidReceived: formData.datePaidReceived || null, // Asegúrate de que formData tenga este campo
+            govRegistryCompletedAt: formData.govRegistryCompletedAt || null, // Asegúrate de que formData tenga este campo
         },
       };
 

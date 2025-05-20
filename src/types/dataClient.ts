@@ -15,6 +15,7 @@ export type DataClient = {
   paid: PaymentStatus;
   observation: string;
   datePaidReceived: string;
-  phones: string[];
+  govRegistryCompletedAt: string;
+  phones: string[]; 
 };
 

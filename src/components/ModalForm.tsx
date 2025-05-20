@@ -10,7 +10,7 @@ type FormData = {
   affiliationId: string;
   fullName: string;
   identification: string;
-  companyId: string | null; // Permitimos null inicialmente
+  companyId: string | null;
   phones: string[];
   value: number;
   eps: string;
@@ -21,6 +21,7 @@ type FormData = {
   observation: string;
   paid: "Pendiente" | "Pagado";
   datePaidReceived: string;
+  govRegistryCompletedAt: string; // Agrega este campo
 };
 
 interface FormModalProps {
@@ -49,6 +50,7 @@ export default function FormModal({ isOpen, onClose, client, refetch }: FormModa
     observation: "",
     paid: "Pendiente",
     datePaidReceived: "",
+    govRegistryCompletedAt: "", // Inicializa el nuevo campo
   });
 
   useEffect(() => {
@@ -69,9 +71,10 @@ export default function FormModal({ isOpen, onClose, client, refetch }: FormModa
         observation: client.observation,
         paid: client.paid,
         datePaidReceived: client.datePaidReceived || "",
+        govRegistryCompletedAt: client.govRegistryCompletedAt || "", // Inicializa con el valor del cliente
       });
     }
-  }, [client, lists]); // ¡Importante incluir 'lists' en las dependencias!
+  }, [client, lists]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -80,7 +83,6 @@ export default function FormModal({ isOpen, onClose, client, refetch }: FormModa
       const numericValue = Number(value.replace(/\D/g, ""));
       setFormData((prev) => ({ ...prev, value: numericValue }));
     } else if (name.startsWith("phones[")) {
-      // Obtener el índice del teléfono que se está cambiando
       const index = parseInt(name.split("[")[1].split("]")[0]);
       const newPhones = [...formData.phones];
       newPhones[index] = value;
@@ -120,10 +122,11 @@ export default function FormModal({ isOpen, onClose, client, refetch }: FormModa
     });
 
     try {
-      const response = await fetch(`${urlBase}/affiliations`, { // Asegúrate de que la ruta sea correcta
+      console.log("DATA ENVIADA PARA ACTUALIZACION",formData);
+      const response = await fetch(`${urlBase}/affiliations`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(formData), // formData ahora incluye govRegistryCompletedAt
       });
 
       if (!response.ok) {

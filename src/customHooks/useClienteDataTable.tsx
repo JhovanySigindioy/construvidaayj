@@ -68,18 +68,20 @@ export function useClientsData({ month, year }: Params) {
             if ('error' in rawData) {
                 throw new Error(rawData.error);
             }
-
+            console.log('Este es el raw data::::', JSON.stringify(rawData[0].datePaidReceived, null, 2))
             const formatted = rawData.map((item) => ({
                 ...item,
                 datePaidReceived: formatDateForInput(item.datePaidReceived),
             }));
 
             setData(formatted);
+
         } catch (err: any) {
             console.error('Error al obtener los datos:', err);
             setError(err.message || 'Error desconocido');
         } finally {
             setIsLoading(false);
+
         }
     }, [month, year]);
 

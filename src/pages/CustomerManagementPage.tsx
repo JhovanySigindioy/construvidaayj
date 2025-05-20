@@ -25,6 +25,7 @@ const headers: (keyof DataClient)[] = [
     'companyName', // Añadida la columna de la empresa
     'phones',      // Añadida la columna de teléfonos
     'datePaidReceived',
+    'govRegistryCompletedAt',
     'value',
     'eps',
     'arl',
@@ -39,10 +40,11 @@ const headerLabels: Record<keyof DataClient, string> = {
     clientId: 'ID Cliente',
     affiliationId: 'ID Afiliación',
     fullName: 'Nombre completo',
-    identification: 'ID',
+    identification: 'Cédula',
     companyName: "Empresa",
     phones: "Teléfono",
-    datePaidReceived: 'Fecha afiliación',
+    datePaidReceived: 'Pago Recibido',
+    govRegistryCompletedAt: 'Fecha Afiliacion (Plataformas Gob)',
     value: 'Valor',
     eps: 'EPS',
     arl: 'ARL',
@@ -188,7 +190,7 @@ export default function CustomerManagementPage() {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        clientId: item.clientId,
+                        affiliationId: item.affiliationId,
                         reason: 'Desafiliación por eliminación',
                         cost: 0.00,
                         processedBy: user.id,
@@ -339,6 +341,7 @@ export default function CustomerManagementPage() {
                                                 if (!response.ok) {
                                                     throw new Error('Error al actualizar en el servidor');
                                                 }
+                                                refetch();
                                             } catch (error) {
                                                 console.error('Error actualizando estado de pago:', error);
                                                 setLocalData((prev) =>
