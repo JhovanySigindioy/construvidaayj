@@ -36,7 +36,7 @@ export default function LoginForm() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${urlBase}/login`, {
+      const res = await fetch(`${urlBase}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

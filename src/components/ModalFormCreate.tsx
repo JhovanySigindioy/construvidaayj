@@ -5,6 +5,7 @@ import { DataClient } from "../types/dataClient";
 import { useLists } from "../context/ListsContext";
 import { urlBase } from "../globalConfig/config";
 import { useAuth } from "../context/AuthContext";
+import { json } from "react-router-dom";
 
 interface ModalFormCreateProps {
   isOpen: boolean;
@@ -145,7 +146,7 @@ export default function ModalFormCreate({ isOpen, onClose, refetch }: ModalFormC
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Error al guardar los datos del cliente y la afiliación, intentelo de nuevo más tarde");
+        throw new Error(errorData.error || "Error al guardar los datos del cliente y la afiliación, intentelo de nuevo más tarde");
       }
 
       Swal.fire({
@@ -209,12 +210,18 @@ export default function ModalFormCreate({ isOpen, onClose, refetch }: ModalFormC
               </Dialog.Title>
 
               <form onSubmit={handleSubmit} className="mt-4 grid grid-cols-2 gap-4">
-                <div className="">
+                {/* Seleccionar Empresa */}
+                <div> {/* Este div ya existe, solo le agregamos el label */}
+                  <label htmlFor="companyName" className="block text-gray-700 text-sm font-bold mb-1">
+                    Empresa:
+                  </label>
                   <select
+                    id="companyName" // Agregado id para el label
                     name="companyName"
                     value={formData.companyName}
                     onChange={handleChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    required
                   >
                     <option value="">Seleccionar Empresa</option>
                     {lists?.companies.map((companyItem) => (
@@ -225,147 +232,198 @@ export default function ModalFormCreate({ isOpen, onClose, refetch }: ModalFormC
                   </select>
                 </div>
 
-                <input
-                  type="number"
-                  name="value"
-                  value={formData.value === 0 ? '' : formData.value}
-                  onChange={handleChange}
-                  placeholder="Valor de afiliación"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  required
-                />
-                <input
-                  type="text"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                  placeholder="Nombre completo"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  required
-                />
+                {/* Valor de afiliación */}
+                <div> {/* Se envuelve el input en un div para el layout de cuadrícula */}
+                  <label htmlFor="value" className="block text-gray-700 text-sm font-bold mb-1">
+                    Valor de Afiliación:
+                  </label>
+                  <input
+                    type="number"
+                    id="value" // Agregado id para el label
+                    name="value"
+                    value={formData.value === 0 ? '' : formData.value}
+                    onChange={handleChange}
+                    placeholder="Ej: 150000"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    required
+                  />
+                </div>
 
-                <input
-                  type="text"
-                  name="identification"
-                  value={formData.identification}
-                  onChange={handleChange}
-                  placeholder="Identificación"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  required
-                />
+                {/* Nombre completo */}
+                <div> {/* Se envuelve el input en un div */}
+                  <label htmlFor="fullName" className="block text-gray-700 text-sm font-bold mb-1">
+                    Nombre Completo:
+                  </label>
+                  <input
+                    type="text"
+                    id="fullName" // Agregado id para el label
+                    name="fullName"
+                    value={formData.fullName}
+                    onChange={handleChange}
+                    placeholder="Ej: Juan Pérez"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    required
+                  />
+                </div>
 
-                <input
-                  type="tel"
-                  name="phones[0]" // Usamos la notación de array para referirnos al primer elemento
-                  value={formData.phones[0] || ''} // Mostramos el primer teléfono o una cadena vacía si no existe
-                  onChange={(e) => {
-                    const { value } = e.target;
-                    setFormData((prev) => ({
-                      ...prev,
-                      phones: [value, ...(prev.phones.slice(1))], // Actualizamos el primer teléfono y mantenemos los demás
-                    }));
-                  }}
-                  placeholder="Teléfono del afiliado"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                />
+                {/* Identificación */}
+                <div> {/* Se envuelve el input en un div */}
+                  <label htmlFor="identification" className="block text-gray-700 text-sm font-bold mb-1">
+                    Identificación:
+                  </label>
+                  <input
+                    type="text"
+                    id="identification" // Agregado id para el label
+                    name="identification"
+                    value={formData.identification}
+                    onChange={handleChange}
+                    placeholder="Ej: 123456789"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    required
+                  />
+                </div>
 
-                <select
-                  name="eps"
-                  value={formData.eps}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  required
-                >
-                  <option value="">Seleccionar EPS</option>
-                  {lists?.eps.map((epsItem) => (
-                    <option key={epsItem.id} value={epsItem.name}>
-                      {epsItem.name}
-                    </option>
-                  ))}
-                </select>
+                {/* Teléfono del afiliado */}
+                <div> {/* Se envuelve el input en un div */}
+                  <label htmlFor="phone" className="block text-gray-700 text-sm font-bold mb-1">
+                    Teléfono del Afiliado:
+                  </label>
+                  <input
+                    type="tel"
+                    id="phone" // Agregado id para el label
+                    name="phones[0]"
+                    value={formData.phones[0] || ''}
+                    onChange={(e) => {
+                      const { value } = e.target;
+                      setFormData((prev) => ({
+                        ...prev,
+                        phones: [value, ...(prev.phones.slice(1))],
+                      }));
+                    }}
+                    placeholder="Ej: 3001234567"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
 
-                <select
-                  name="arl"
-                  value={formData.arl}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                >
-                  <option value="">Seleccionar ARL (Opcional)</option>
-                  {lists?.arl.map((arlItem) => (
-                    <option key={arlItem.id} value={arlItem.name}>
-                      {arlItem.name}
-                    </option>
-                  ))}
-                </select>
+                {/* Seleccionar EPS */}
+                <div> {/* Se envuelve el select en un div */}
+                  <label htmlFor="eps" className="block text-gray-700 text-sm font-bold mb-1">
+                    EPS:
+                  </label>
+                  <select
+                    id="eps" // Agregado id para el label
+                    name="eps"
+                    value={formData.eps}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  >
+                    <option value="">Seleccionar EPS</option>
+                    {lists?.eps.map((epsItem) => (
+                      <option key={epsItem.id} value={epsItem.name}>
+                        {epsItem.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                <select
-                  name="risk"
-                  value={formData.risk}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  required
-                >
-                  <option value="">Seleccionar Nivel de Riesgo</option>
-                  <option value="Nivel I">Nivel I</option>
-                  <option value="Nivel II">Nivel II</option>
-                  <option value="Nivel III">Nivel III</option>
-                  <option value="Nivel IV">Nivel IV</option>
-                  <option value="Nivel V">Nivel V</option>
-                </select>
+                {/* Seleccionar ARL (Opcional) */}
+                <div> {/* Se envuelve el select en un div */}
+                  <label htmlFor="arl" className="block text-gray-700 text-sm font-bold mb-1">
+                    ARL (Opcional):
+                  </label>
+                  <select
+                    id="arl" // Agregado id para el label
+                    name="arl"
+                    value={formData.arl}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  >
+                    <option value="">Seleccionar ARL (Opcional)</option>
+                    {lists?.arl.map((arlItem) => (
+                      <option key={arlItem.id} value={arlItem.name}>
+                        {arlItem.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                <select
-                  name="ccf"
-                  value={formData.ccf}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                >
-                  <option value="">Seleccionar CCF (Opcional)</option>
-                  {lists?.ccf.map((ccfItem) => (
-                    <option key={ccfItem.id} value={ccfItem.name}>
-                      {ccfItem.name}
-                    </option>
-                  ))}
-                </select>
+                {/* Seleccionar Nivel de Riesgo */}
+                <div> {/* Se envuelve el select en un div */}
+                  <label htmlFor="risk" className="block text-gray-700 text-sm font-bold mb-1">
+                    Nivel de Riesgo:
+                  </label>
+                  <select
+                    id="risk" // Agregado id para el label
+                    name="risk"
+                    value={formData.risk}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  >
+                    <option value="">Seleccionar Nivel de Riesgo</option>
+                    <option value="Nivel I">Nivel 1</option>
+                    <option value="Nivel II">Nivel 2</option>
+                    <option value="Nivel III">Nivel 3</option>
+                    <option value="Nivel IV">Nivel 4</option>
+                    <option value="Nivel V">Nivel 5</option>
+                  </select>
+                </div>
 
-                <select
-                  name="pensionFund"
-                  value={formData.pensionFund}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                >
-                  <option value="">Seleccionar Fondo de Pensión (Opcional)</option>
-                  {lists?.pensionFunds.map((pfItem) => (
-                    <option key={pfItem.id} value={pfItem.name}>
-                      {pfItem.name}
-                    </option>
-                  ))}
-                </select>
+                {/* Seleccionar CCF (Opcional) */}
+                <div> {/* Se envuelve el select en un div */}
+                  <label htmlFor="ccf" className="block text-gray-700 text-sm font-bold mb-1">
+                    CCF (Opcional):
+                  </label>
+                  <select
+                    id="ccf" // Agregado id para el label
+                    name="ccf"
+                    value={formData.ccf}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  >
+                    <option value="">Seleccionar CCF (Opcional)</option>
+                    {lists?.ccf.map((ccfItem) => (
+                      <option key={ccfItem.id} value={ccfItem.name}>
+                        {ccfItem.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                <textarea
-                  name="observation"
-                  value={formData.observation}
-                  onChange={handleChange}
-                  placeholder="Observaciones"
-                  className="col-span-2 w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                />
+                {/* Seleccionar Fondo de Pensión (Opcional) */}
+                <div> {/* Se envuelve el select en un div */}
+                  <label htmlFor="pensionFund" className="block text-gray-700 text-sm font-bold mb-1">
+                    Fondo de Pensión (Opcional):
+                  </label>
+                  <select
+                    id="pensionFund" // Agregado id para el label
+                    name="pensionFund"
+                    value={formData.pensionFund}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  >
+                    <option value="">Seleccionar Fondo de Pensión (Opcional)</option>
+                    {lists?.pensionFunds.map((pfItem) => (
+                      <option key={pfItem.id} value={pfItem.name}>
+                        {pfItem.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                <input
-                  type="date"
-                  name="datePaidReceived"
-                  value={formData.datePaidReceived}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                />
-
-                <select
-                  name="paid"
-                  value={formData.paid}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                >
-                  <option value="Pendiente">Pendiente</option>
-                  <option value="Pagado">Pagado</option>
-                </select>
+                {/* Observaciones */}
+                <div className="col-span-2"> {/* Ocupa 2 columnas */}
+                  <label htmlFor="observation" className="block text-gray-700 text-sm font-bold mb-1">
+                    Observaciones:
+                  </label>
+                  <textarea
+                    id="observation" // Agregado id para el label
+                    name="observation"
+                    value={formData.observation}
+                    onChange={handleChange}
+                    placeholder="Añade cualquier observación relevante aquí..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>       
 
                 <div className="col-span-2 flex justify-end gap-3 mt-4">
                   <button

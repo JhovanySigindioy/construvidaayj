@@ -1,0 +1,326 @@
+-- =====================
+-- POPULATE CATALOG TABLES
+-- =====================
+
+INSERT INTO ccf_list (name) VALUES
+('Compensar'),
+('Colsubsidio'),
+('Cafam'),
+('Comfama'),
+('Comfenalco Antioquia'),
+('Cajasán'),
+('Comfamiliar Risaralda'),
+('Comfenalco Valle'),
+('Comfacor'),
+('Cajacopi'),
+('Comfacundi'),
+('Comfamiliar Atlántico'),
+('Confamilia Camacol'),
+('Comfamiliar Cartagena y Bolívar'),
+('Comfamiliar Putumayo'),
+('Comfanorte'),
+('Comfaoriente'),
+('Comfasucre'),
+('Comfatolima'),
+('Comfamiliar Huila'),
+('Comfamiliar Nariño'),
+('Comfaguajira');
+
+INSERT INTO eps_list (name) VALUES
+('Sanitas'),
+('Nueva EPS'),
+('Sura'),
+('Compensar'),
+('Coomeva'),
+('Salud Total'),
+('Famisanar'),
+('Colsubsidio'),
+('Cruz Blanca'),
+('Aliansalud');
+
+INSERT INTO arl_list (name) VALUES
+('Positiva'),
+('Sura'),
+('Colmena'),
+('Bolívar'),
+('AXA Colpatria'),
+('Liberty Seguros');
+
+INSERT INTO pension_fund_list (name) VALUES
+('Colpensiones'),
+('Colfondos'),
+('Porvenir'),
+('Protección'),
+('Escandinavia');
+
+-- =========================================================
+-- POPULATE BASE TABLES (Users, Offices, Clients)
+-- =========================================================
+
+INSERT INTO companies (name, nit, address, phone, email) VALUES
+('ALBA AZUCENA', '800123456-7', 'Cra 9 # 14-35', '3046283952', 'construvidaayj24@ gmail.com'),
+('VANESSA TOVAR', '901234567-8', 'Calle 15 Cra 9 # 24-26', '3203371546', 'saludproactiva@gmail.com'),
+('INDEPENDIENTE', '830256987-1', 'Carrera', '1111111111', 'info@empresaC.com');
+
+INSERT INTO offices (name, representative_name, logo_url) VALUES
+('Construvida AYJ', 'Angelica Ravelo', 'https://example.com/logo1.png'),
+('Salud Proactiva', 'Vannesa Tovar', 'https://example.com/logo2.png');
+
+-- Passwords in plain text FOR EXAMPLE! Use hash in production.
+INSERT INTO users (username, password_hash, role) VALUES
+('angelicaadmin', '$2b$10$Ua9BNdZjYlOgirFL5NQ2kuj9ZKQ.GyOfAfpZt9//Ow2.21teORfda', 'admin'),
+('vannesa2025', '$2b$10$VzMX0XeZRClY9c6w4P2BZOg2LSnHRlMd0H4HJzi1sI5vVsXJrLX8K', 'office_manager'),
+('angelica2025', '$2b$10$Ua9BNdZjYlOgirFL5NQ2kuj9ZKQ.GyOfAfpZt9//Ow2.21teORfda', 'office_manager');
+
+-- !!! Ensure these IDs match the actual user IDs from the users table.
+INSERT INTO user_offices (user_id, office_id) VALUES
+(2, 2), -- vannesa2025 (assuming ID 2) 
+(3, 1); -- angelica2025 (assuming ID 3)
+
+
+
+INSERT IGNORE INTO clients (full_name, identification, company_id) VALUES ('KAREN VELASQUEZ PATIÑO', '35199209', 1);
+INSERT IGNORE INTO clients (full_name, identification, company_id) VALUES ('YIRA MARIDE NERY MORALES', '1245411', 1);
+INSERT IGNORE INTO clients (full_name, identification, company_id) VALUES ('LAURA CAROLINA FLOREZ RIAÑO', '1098702783', 2);
+INSERT IGNORE INTO clients (full_name, identification, company_id) VALUES ('MARYI JOHANNA HERNANDEZ MORENO', '1020739183', 1);
+INSERT IGNORE INTO clients (full_name, identification, company_id) VALUES ('RICARDO SANCHEZ', '1072663763', 1);
+INSERT IGNORE INTO clients (full_name, identification, company_id) VALUES ('LEIDY DANIELA HERNANDEZ JULIO', '1072710291', 2);
+INSERT IGNORE INTO clients (full_name, identification, company_id) VALUES ('DANIELA HERNANDEZ QUINCHE', '1072706504', 1);
+INSERT IGNORE INTO clients (full_name, identification, company_id) VALUES ('MARYI YOMARA AVILA MATIZ', '1072646985', 1);
+INSERT IGNORE INTO clients (full_name, identification, company_id) VALUES ('NORALBA ELENA CASTELLANOS ZAMBRANO', '1002649592', 2);
+INSERT IGNORE INTO clients (full_name, identification, company_id) VALUES ('ANGELICA ROCIO RAVELO MANRIQUE', '1072709719', 3);
+
+INSERT INTO monthly_affiliations (
+    client_id, month, year, value,
+    eps_id, arl_id, ccf_id, pension_fund_id,
+    risk, observation, user_id, office_id, company_id,
+    date_paid_received, gov_record_completed_at, paid_status
+) VALUES (
+    (SELECT id FROM clients WHERE identification = '35199209'), -- KAREN VELASQUEZ PATIÑO
+    5, 2025, 110000.00,
+    6, NULL, NULL, 3, -- Salud Total (ID 6), ARL (NULL), CCF (NULL), Porvenir (ID 3)
+    NULL, 'EMBARAZDA', 3, 1, 1, -- Risk (NULL), Observation, user_id, office_id, company_id (ALBA AZUCENA ID 1)
+    '2025-05-30 00:00:00', '2025-05-30 00:00:00', 'Pendiente'
+);
+
+INSERT INTO monthly_affiliations (
+    client_id, month, year, value,
+    eps_id, arl_id, ccf_id, pension_fund_id,
+    risk, observation, user_id, office_id, company_id,
+    date_paid_received, gov_record_completed_at, paid_status
+) VALUES (
+    (SELECT id FROM clients WHERE identification = '1245411'), -- YIRA MARIDE NERY MORALES
+    5, 2025, 75000.00,
+    1, NULL, NULL, NULL, -- Sanitas (ID 1), ARL (NULL), CCF (NULL), F. PENSION (NULL)
+    NULL, 'EMBARAZADA', 3, 1, 1, -- Risk (NULL), Observation, user_id, office_id, company_id (ALBA AZUCENA ID 1)
+    '2025-05-30 00:00:00', '2025-05-30 00:00:00', 'Pendiente'
+);
+
+INSERT INTO monthly_affiliations (
+    client_id, month, year, value,
+    eps_id, arl_id, ccf_id, pension_fund_id,
+    risk, observation, user_id, office_id, company_id,
+    date_paid_received, gov_record_completed_at, paid_status
+) VALUES (
+    (SELECT id FROM clients WHERE identification = '1098702783'), -- LAURA CAROLINA FLOREZ RIAÑO
+    5, 2025, 160000.00,
+    4, NULL, NULL, 3, -- Compensar (ID 4), ARL (NULL), CCF (NULL), Porvenir (ID 3)
+    NULL, 'EMBARAZADA', 3, 1, 2, -- Risk (NULL), Observation, user_id, office_id, company_id (VANESSA TOVAR ID 2)
+    '2025-05-30 00:00:00', '2025-05-30 00:00:00', 'Pendiente'
+);
+
+INSERT INTO monthly_affiliations (
+    client_id, month, year, value,
+    eps_id, arl_id, ccf_id, pension_fund_id,
+    risk, observation, user_id, office_id, company_id,
+    date_paid_received, gov_record_completed_at, paid_status
+) VALUES (
+    (SELECT id FROM clients WHERE identification = '1020739183'), -- MARYI JOHANNA HERNANDEZ MORENO
+    5, 2025, 115000.00,
+    4, 2, NULL, NULL, -- Compensar (ID 4), Sura (ARL ID 2), CCF (NULL), F. PENSION (NULL)
+    'Nivel 1', NULL, 3, 1, 1, -- Risk, Observation (NULL), user_id, office_id, company_id (ALBA AZUCENA ID 1)
+    '2025-05-30 00:00:00', '2025-05-30 00:00:00', 'Pendiente'
+);
+
+INSERT INTO monthly_affiliations (
+    client_id, month, year, value,
+    eps_id, arl_id, ccf_id, pension_fund_id,
+    risk, observation, user_id, office_id, company_id,
+    date_paid_received, gov_record_completed_at, paid_status
+) VALUES (
+    (SELECT id FROM clients WHERE identification = '1072663763'), -- RICARDO SANCHEZ
+    5, 2025, 110000.00,
+    1, 2, 1, NULL, -- Sanitas (ID 1), Sura (ARL ID 2), Compensar (CCF ID 1), F. PENSION (NULL)
+    'Nivel 1', 'ALBA AZUCENA/ VANESSA', 3, 1, 1, -- Risk, Observation, user_id, office_id, company_id (ALBA AZUCENA ID 1)
+    '2025-05-30 00:00:00', '2025-05-30 00:00:00', 'Pendiente'
+);
+
+INSERT INTO monthly_affiliations (
+    client_id, month, year, value,
+    eps_id, arl_id, ccf_id, pension_fund_id,
+    risk, observation, user_id, office_id, company_id,
+    date_paid_received, gov_record_completed_at, paid_status
+) VALUES (
+    (SELECT id FROM clients WHERE identification = '1072710291'), -- LEIDY DANIELA HERNANDEZ JULIO
+    5, 2025, 75000.00,
+    1, 2, NULL, NULL, -- Sanitas (ID 1), Sura (ARL ID 2), CCF (NULL), F. PENSION (NULL)
+    'Nivel 1', 'VANESSA TOVAR/ALBA', 3, 1, 2, -- Risk, Observation, user_id, office_id, company_id (VANESSA TOVAR ID 2)
+    '2025-05-30 00:00:00', '2025-05-30 00:00:00', 'Pendiente'
+);
+
+INSERT INTO monthly_affiliations (
+    client_id, month, year, value,
+    eps_id, arl_id, ccf_id, pension_fund_id,
+    risk, observation, user_id, office_id, company_id,
+    date_paid_received, gov_record_completed_at, paid_status
+) VALUES (
+    (SELECT id FROM clients WHERE identification = '1072706504'), -- DANIELA HERNANDEZ QUINCHE
+    5, 2025, 110000.00,
+    1, 2, NULL, NULL, -- Sanitas (ID 1), Sura (ARL ID 2), CCF (NULL), F. PENSION (NULL)
+    'Nivel 1', NULL, 3, 1, 1, -- Risk, Observation (NULL), user_id, office_id, company_id (ALBA AZUCENA ID 1)
+    '2025-05-30 00:00:00', '2025-05-30 00:00:00', 'Pendiente'
+);
+
+INSERT INTO monthly_affiliations (
+    client_id, month, year, value,
+    eps_id, arl_id, ccf_id, pension_fund_id,
+    risk, observation, user_id, office_id, company_id,
+    date_paid_received, gov_record_completed_at, paid_status
+) VALUES (
+    (SELECT id FROM clients WHERE identification = '1072646985'), -- MARYI YOMARA AVILA MATIZ
+    5, 2025, 105000.00,
+    1, 2, 2, NULL, -- Sanitas (ID 1), Sura (ARL ID 2), Colsubsidio (CCF ID 2), F. PENSION (NULL)
+    'Nivel 1', NULL, 3, 1, 1, -- Risk, Observation (NULL), user_id, office_id, company_id (ALBA AZUCENA ID 1)
+    '2025-05-30 00:00:00', '2025-05-30 00:00:00', 'Pendiente'
+);
+
+INSERT INTO monthly_affiliations (
+    client_id, month, year, value,
+    eps_id, arl_id, ccf_id, pension_fund_id,
+    risk, observation, user_id, office_id, company_id,
+    date_paid_received, gov_record_completed_at, paid_status
+) VALUES (
+    (SELECT id FROM clients WHERE identification = '1002649592'), -- NORALBA ELENA CASTELLANOS ZAMBRANO
+    5, 2025, 160000.00,
+    3, 2, 2, NULL, -- Sura (EPS ID 3), Sura (ARL ID 2), Colsubsidio (CCF ID 2), F. PENSION (NULL)
+    'Nivel 1', 'FALTA CAJA, VANESSA Y ALBA', 3, 1, 2, -- Risk, Observation, user_id, office_id, company_id (VANESSA TOVAR ID 2)
+    '2025-05-30 00:00:00', '2025-05-30 00:00:00', 'Pendiente'
+);
+
+INSERT INTO monthly_affiliations (
+    client_id, month, year, value,
+    eps_id, arl_id, ccf_id, pension_fund_id,
+    risk, observation, user_id, office_id, company_id,
+    date_paid_received, gov_record_completed_at, paid_status
+) VALUES (
+    (SELECT id FROM clients WHERE identification = '1072709719'), -- ANGELICA ROCIO RAVELO MANRIQUE
+    5, 2025, 0.00,
+    1, 2, NULL, 3, -- Sanitas (ID 1), Sura (ARL ID 2), CCF (NULL), Porvenir (ID 3)
+    'Nivel 1', NULL, 3, 1, 3, -- Risk, Observation (NULL), user_id, office_id, company_id (INDEPENDIENTE ID 3)
+    '2025-05-30 00:00:00', '2025-05-30 00:00:00', 'Pendiente'
+);
+
+
+
+
+
+2025-04-01
+2025-04-02
+2025-04-01
+2025-04-14
+2025-04-01
+2025-04-01
+2025-04-01
+2025-04-01
+2025-03-01
+2025-03-01
+2025-04-09
+2025-02-05
+2025-02-05
+2025-04-01
+2025-04-01
+2025-04-01
+2025-04-01
+2025-04-01
+2025-04-15
+2025-04-01
+ 4/02/2025
+ 4/03/2025
+ 4/03/2025
+ 4/02/2025
+ 4/03/2025
+ 4/03/2025
+ 4/02/2025
+2025-04-15
+2025-04-15
+ 4/02/2025
+2025-03-10
+ 4/02/2025
+2025-05-02
+2025-05-05
+2025-05-09
+2025-05-09
+2025-05-12
+2025-05-12
+2025-05-16
+2025-05-19
+2025-05-19
+2025-05-20
+2025-05-20
+2025-05-22
+2025-05-22
+2025-05-22
+
+
+1/04/2025
+2/04/2025
+1/04/2025
+14/04/2025
+1/04/2025
+2025-04-01
+2025-04-01
+2025-03-01
+2025-03-01
+9/04/2025
+5/02/2025
+5/02/2025
+2025-04-01
+2025-04-01
+2025-04-01
+2025-04-01
+1/04/2025
+15/04/2025
+2025-04-01
+2025-02-01
+ 4/03/2025
+2025-03-01
+2025-02-01
+2025-03-01
+2025-03-01
+2025-02-01
+15/04/2025
+15/04/2025
+2025-02-01
+10/03/2025
+2025-02-01
+
+2/05/2025
+5/05/2025
+9/05/2025
+9/05/2025
+12/05/2025
+12/05/2025
+16/05/2025
+19/05/2025
+19/05/2025
+20/05/2025
+20/05/2025
+22/05/2025
+22/05/2025
+22/05/2025
+ 4/03/2025
+
+
+
+
+

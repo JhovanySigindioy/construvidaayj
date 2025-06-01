@@ -42,7 +42,7 @@ export function ListsProvider({ children }: { children: ReactNode }) {
 
                 const response = await fetch(`${urlBase}/lists`);
                 if (!response.ok) {
-                    throw new Error('Error al obtener las listas');
+                    throw new Error('Error al obtener las listas, No joooda');
                 }
 
                 const data: ListsResponse = await response.json();

@@ -11,7 +11,11 @@
   },
   "dependencies": {
     "@headlessui/react": "^2.2.2",
+    "@nivo/bar": "^0.98.0",
+    "@nivo/core": "^0.98.0",
+    "@nivo/line": "^0.98.0",
     "@tailwindcss/vite": "^4.1.4",
+    "date-fns": "^4.1.0",
     "lucide-react": "^0.507.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

@@ -1,28 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react'; // Importa useRef
-import { DataClient } from '../types/dataClient';
 
-interface ColumnSelectorProps {
-  visibleHeaders: (keyof DataClient)[];
-  setVisibleHeaders: React.Dispatch<React.SetStateAction<(keyof DataClient)[]>>;
-  headerLabels: Record<keyof DataClient, string>;
+interface ColumnSelectorProps<T extends object> {
+  visibleHeaders: (keyof T)[];
+  setVisibleHeaders: React.Dispatch<React.SetStateAction<(keyof T)[]>>;
+  headerLabels: Record<keyof T, string>;
 }
 
-export default function ColumnSelector({
-  visibleHeaders,
-  setVisibleHeaders,
-  headerLabels,
-}: ColumnSelectorProps) {
+export default function ColumnSelector<T extends object>({ // <--- ¡Añadir <T extends object> aquí!
+    visibleHeaders,
+    setVisibleHeaders,
+    headerLabels,
+}: ColumnSelectorProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
-  const allHeaders = Object.keys(headerLabels) as (keyof DataClient)[];
+  const allHeaders = Object.keys(headerLabels) as (keyof T)[];
   const allVisible = visibleHeaders.length === allHeaders.length;
   const selectorRef = useRef<HTMLDivElement>(null); // Referencia al contenedor del componente
 
-  const toggleHeader = (header: keyof DataClient) => {
-    setVisibleHeaders(prevHeaders =>
-      prevHeaders.includes(header)
-        ? prevHeaders.filter((h) => h !== header)
-        : [...prevHeaders, header]
-    );
+  const toggleHeader = (header: keyof T) => {
+  setVisibleHeaders((prevHeaders: (keyof T)[]) => // <--- Aquí el cambio
+    prevHeaders.includes(header)
+      ? prevHeaders.filter((h: keyof T) => h !== header) // <--- Y aquí el cambio
+      : [...prevHeaders, header]
+  );
   };
 
   const toggleAll = () => {
@@ -63,12 +62,12 @@ export default function ColumnSelector({
           <ul className="space-y-1 text-sm">
             {allHeaders.map((header) => (
               <li
-                key={header}
+                key={header as string}
                 onClick={() => toggleHeader(header)}
                 className="flex items-center hover:bg-gray-200 p-1 rounded cursor-pointer"
               >
                 <input
-                  id={header}
+                  id={header as string}
                   type="checkbox"
                   checked={visibleHeaders.includes(header)}
                   readOnly

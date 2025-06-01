@@ -1,0 +1,199 @@
+-- =====================
+-- ENUMS (Custom Types)
+-- =====================
+
+-- User Roles
+-- MySQL handles ENUM types directly
+CREATE TABLE IF NOT EXISTS user_roles (
+    role_name VARCHAR(20) PRIMARY KEY
+);
+
+INSERT INTO user_roles (role_name) VALUES ('admin'), ('office_manager'), ('viewer');
+
+-- Payment Status
+CREATE TABLE IF NOT EXISTS payment_statuses (
+    status_name VARCHAR(20) PRIMARY KEY
+);
+
+INSERT INTO payment_statuses (status_name) VALUES ('Pendiente'), ('Pagado');
+
+
+-- =====================
+-- CATALOG TABLES
+-- =====================
+
+CREATE TABLE IF NOT EXISTS companies (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL UNIQUE,
+    nit VARCHAR(20) UNIQUE,
+    address VARCHAR(255),
+    phone VARCHAR(20),
+    email VARCHAR(255) UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_active BOOLEAN DEFAULT TRUE,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS eps_list (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS arl_list (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS ccf_list (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS pension_fund_list (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- =====================
+-- BASE TABLES
+-- =====================
+
+-- Offices
+CREATE TABLE IF NOT EXISTS offices (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    representative_name VARCHAR(100) NOT NULL,
+    logo_url TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Users
+CREATE TABLE IF NOT EXISTS users (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    role VARCHAR(20) NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (role) REFERENCES user_roles(role_name)
+);
+
+-- User Offices (Many-to-Many relationship)
+CREATE TABLE IF NOT EXISTS user_offices (
+    user_id INT NOT NULL,
+    office_id INT NOT NULL,
+    PRIMARY KEY (user_id, office_id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (office_id) REFERENCES offices(id) ON DELETE CASCADE
+);
+
+-- Clients
+CREATE TABLE IF NOT EXISTS clients (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    full_name VARCHAR(100) NOT NULL,
+    identification VARCHAR(50) UNIQUE NOT NULL,
+    company_id INT NOT NULL,
+    email VARCHAR(255),
+    address VARCHAR(255),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS client_phones (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    client_id INT NOT NULL,
+    phone_number VARCHAR(20) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE (client_id, phone_number), -- Avoid duplicates for the same client
+    FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
+);
+
+-- =====================
+-- MONTHLY AFFILIATIONS HISTORY
+-- =====================
+
+CREATE TABLE IF NOT EXISTS monthly_affiliations (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    client_id INT NOT NULL,
+    month INT NOT NULL CHECK (month BETWEEN 1 AND 12),
+    year INT NOT NULL CHECK (year >= 2000),
+    value DECIMAL(12,2),
+    eps_id INT,
+    arl_id INT,
+    ccf_id INT,
+    pension_fund_id INT,
+    risk VARCHAR(50),
+    observation TEXT,
+    paid_status VARCHAR(20) NOT NULL DEFAULT 'Pendiente',
+    date_paid_received TIMESTAMP,
+    gov_record_completed_at TIMESTAMP,
+    office_id INT NOT NULL,
+    user_id INT NOT NULL,
+    company_id INT NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    deleted_at TIMESTAMP,
+    deleted_by_user_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE,
+    FOREIGN KEY (eps_id) REFERENCES eps_list(id),
+    FOREIGN KEY (arl_id) REFERENCES arl_list(id),
+    FOREIGN KEY (ccf_id) REFERENCES ccf_list(id),
+    FOREIGN KEY (pension_fund_id) REFERENCES pension_fund_list(id),
+    FOREIGN KEY (office_id) REFERENCES offices(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
+    FOREIGN KEY (deleted_by_user_id) REFERENCES users(id),
+    FOREIGN KEY (paid_status) REFERENCES payment_statuses(status_name)
+);
+
+CREATE TABLE IF NOT EXISTS clients_unsubscriptions (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    affiliation_id INT NOT NULL,
+    unsubscription_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    reason TEXT,
+    cost DECIMAL(10,2) DEFAULT 0.00,
+    user_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    observation TEXT,
+    FOREIGN KEY (affiliation_id) REFERENCES monthly_affiliations(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- =====================
+-- INDICES
+-- =====================
+
+-- For better searches by month and year
+CREATE INDEX idx_affiliations_month_year ON monthly_affiliations(month, year);
+
+-- For better searches by client
+CREATE INDEX idx_affiliations_client_id ON monthly_affiliations(client_id);
+
+-- For better searches by office and user
+CREATE INDEX idx_affiliations_office_user ON monthly_affiliations(office_id, user_id);
+
+-- For better searches by companies managing the affiliation
+CREATE INDEX idx_affiliations_company_id ON monthly_affiliations(company_id);
+
+-- Create an index for faster searches by client_id
+CREATE INDEX idx_client_phones_client_id ON client_phones (client_id);
+
+-- Create an index for faster unsubscription searches by affiliation
+CREATE INDEX idx_unsubscriptions_affiliation_id ON clients_unsubscriptions(affiliation_id);

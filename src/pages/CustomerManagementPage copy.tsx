@@ -341,11 +341,7 @@ export default function CustomerManagementPage() {
                                                 if (!response.ok) {
                                                     throw new Error('Error al actualizar en el servidor');
                                                 }
-                                                // const result = await response.json();
-                                                // if (result.datePaidReceived) {
-                                                //     setLocalData((prev) => prev.map(p => p.affiliationId === item.affiliationId ? { ...p, datePaidReceived: result.datePaidReceived } : p));
-                                                // }
-                                                refetch();
+                                                // refetch();
                                             } catch (error) {
                                                 console.error('Error actualizando estado de pago:', error);
                                                 setLocalData((prev) =>
