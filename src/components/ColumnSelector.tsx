@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'; // Importa useRef
+import { useLocation } from 'react-router-dom';
 
 interface ColumnSelectorProps<T extends object> {
   visibleHeaders: (keyof T)[];
@@ -7,9 +8,9 @@ interface ColumnSelectorProps<T extends object> {
 }
 
 export default function ColumnSelector<T extends object>({ // <--- ¡Añadir <T extends object> aquí!
-    visibleHeaders,
-    setVisibleHeaders,
-    headerLabels,
+  visibleHeaders,
+  setVisibleHeaders,
+  headerLabels,
 }: ColumnSelectorProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const allHeaders = Object.keys(headerLabels) as (keyof T)[];
@@ -17,11 +18,11 @@ export default function ColumnSelector<T extends object>({ // <--- ¡Añadir <T 
   const selectorRef = useRef<HTMLDivElement>(null); // Referencia al contenedor del componente
 
   const toggleHeader = (header: keyof T) => {
-  setVisibleHeaders((prevHeaders: (keyof T)[]) => // <--- Aquí el cambio
-    prevHeaders.includes(header)
-      ? prevHeaders.filter((h: keyof T) => h !== header) // <--- Y aquí el cambio
-      : [...prevHeaders, header]
-  );
+    setVisibleHeaders((prevHeaders: (keyof T)[]) => // <--- Aquí el cambio
+      prevHeaders.includes(header)
+        ? prevHeaders.filter((h: keyof T) => h !== header) // <--- Y aquí el cambio
+        : [...prevHeaders, header]
+    );
   };
 
   const toggleAll = () => {
@@ -40,12 +41,18 @@ export default function ColumnSelector<T extends object>({ // <--- ¡Añadir <T 
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-
+  const { pathname } = useLocation();
+  const buttonClass = pathname === "/customer_management"
+    ? "bg-sky-400 hover:bg-sky-600"
+    : pathname === "/unsubscriptions"
+      ? "bg-red-800 hover:bg-red-600"
+      : "bg-gray-200 text-black";
   return (
     <div className="relative inline-block" ref={selectorRef}> {/* Asignamos la referencia al div */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="bg-sky-400 text-white px-4 py-2 rounded-md shadow hover:bg-sky-600"
+        className= {`px-4 py-2 rounded-md text-sm font-semibold text-white ${buttonClass} transition-colors duration-150 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-200 focus:ring-opacity-50`}
+        aria-haspopup="true"
       >
         Mostrar columnas
       </button>

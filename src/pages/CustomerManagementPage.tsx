@@ -44,7 +44,7 @@ const headerLabels: Record<keyof DataClient, string> = {
     companyName: "Empresa",
     phones: "Teléfono",
     datePaidReceived: 'Pago Recibido',
-    govRegistryCompletedAt: 'Fecha Afiliacion (Plataformas Gob)',
+    govRegistryCompletedAt: 'Fecha Afiliación',
     value: 'Valor',
     eps: 'EPS',
     arl: 'ARL',

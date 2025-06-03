@@ -57,7 +57,7 @@ const headerLabels: Record<(typeof headers)[number], string> = { // El tipo Reco
     companyId: "ID Empresa", // <--- Añadida etiqueta
     phones: "Teléfono",
     datePaidReceived: 'Pago Recibido (Original)',
-    govRegistryCompletedAt: 'Fecha Afiliacion (Plataformas Gob)',
+    govRegistryCompletedAt: 'Fecha Afiliacion (Original)',
     value: 'Valor (Original)',
     eps: 'EPS',
     arl: 'ARL',

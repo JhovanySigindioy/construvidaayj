@@ -9,24 +9,24 @@ export default function Table<T extends Record<string, any>>({
     cellRenderers = {},
     rowActions,
 }: TableProps<T>) {
-    const { pathname } = useLocation();
-    const theadClass = pathname === "/customer_management"
-        ? "bg-blue-400 text-white"
-        : pathname === "/unsubscriptions"
-            ? "bg-red-800 text-white semibold"
-            : "bg-gray-200 text-black";
+        const { pathname } = useLocation();
+        const theadClass = pathname === "/customer_management"
+            ? "bg-blue-400 text-white"
+            : pathname === "/unsubscriptions"
+                ? "bg-red-800 text-white semibold"
+                : "bg-gray-200 text-black";
     return (
-        <div className="overflow-x-auto fade-in">
-            <table className="min-w-full text-[12px] text-gray-600 shadow-md rounded-lg overflow-hidden bg-white border border-gray-200">
-                <thead className={theadClass}>
+        <div className="overflow-x-auto fade-in rounded-md  border border-gray-200 bg-white/80 backdrop-blur-sm">
+            <table className="min-w-full text-[12px] text-gray-700">
+                <thead className={theadClass + " sticky top-0 z-10"}>
                     <tr>
                         {headers.map((header) => (
-                            <th key={String(header)} className="px-4 py-3 text-left font-semibold tracking-wide">
+                            <th key={String(header)} className="px-6 py-4 text-left font-bold tracking-wide whitespace-nowrap border-b border-gray-300">
                                 {String(headerLabels[header] || header)}
                             </th>
                         ))}
                         {rowActions && (
-                            <th className="px-4 py-3 text-left font-semibold tracking-wide">Acciones</th>
+                            <th className="px-6 py-4 text-left font-bold tracking-wide border-b border-gray-300">Acciones</th>
                         )}
                     </tr>
                 </thead>
@@ -35,7 +35,7 @@ export default function Table<T extends Record<string, any>>({
                         <tr>
                             <td
                                 colSpan={headers.length + (rowActions ? 1 : 0)}
-                                className="px-4 py-6 text-center text-gray-500 italic"
+                                className="px-4 py-8 text-center text-gray-400 italic bg-gray-50"
                             >
                                 No hay datos disponibles.
                             </td>
@@ -43,24 +43,18 @@ export default function Table<T extends Record<string, any>>({
                     ) : (
                         data.map((row) => (
                             <tr
-                                // RECOMENDACIÓN: Usa un ID único de la fila como 'key' si está disponible (ej. row.id, row.affiliationId).
-                                // Usar el 'index' es un antipatrón si la lista puede cambiar de orden, añadirse/eliminarse elementos.
-                                // Ejemplo: key={row.affiliationId || index}
-                                key={row.id} // Mantenemos 'index' como está si no hay un ID único garantizado.
-                                className="transition-colors duration-200 hover:bg-gray-100 even:bg-gray-50"
+                                key={row.id}
+                                className="transition-colors duration-150 hover:bg-slate-100 even:bg-gray-50 odd:bg-white border-b border-gray-100"
                             >
                                 {headers.map((header) => (
-                                    <td key={String(header)} className="px-4 py-3 border-t border-gray-200">
-                                        {/* No es necesario el '!' aquí, ya que la condición de existencia lo garantiza */}
+                                    <td key={String(header)} className="px-6 py-3 align-middle">
                                         {cellRenderers[header]
-                                            ? cellRenderers[header]!(row[header], row) // Mantenemos el '!' si estás seguro de que no será null/undefined después de la verificación
+                                            ? cellRenderers[header]!(row[header], row)
                                             : String(row[header])}
                                     </td>
                                 ))}
                                 {rowActions && (
-                                    <td className="px-4 py-3 border-t border-gray-200">
-                                        {rowActions(row)}
-                                    </td>
+                                    <td className="px-6 py-3 align-middle">{rowActions(row)}</td>
                                 )}
                             </tr>
                         ))
