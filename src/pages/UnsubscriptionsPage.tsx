@@ -245,7 +245,8 @@ export default function UnsubscriptionsPage() {
 
                 {!isLoading && !error && filteredData.length > 0 && (
                     <>
-                        <Table<UnsubscribedAffiliationData> // Cambiado el tipo genérico de la tabla
+                        <Table<UnsubscribedAffiliationData>
+                           
                             headers={visibleHeaders}
                             data={paginatedData}
                             headerLabels={headerLabels}

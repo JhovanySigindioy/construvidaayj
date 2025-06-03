@@ -311,6 +311,7 @@ export default function CustomerManagementPage() {
                 {!isLoading && !error && filteredData.length > 0 && (
                     <>
                         <Table<DataClient>
+                         
                             headers={visibleHeaders}
                             data={paginatedData}
                             headerLabels={headerLabels}

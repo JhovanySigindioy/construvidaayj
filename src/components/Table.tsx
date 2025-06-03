@@ -1,6 +1,7 @@
 import { TableProps } from "../interfaces/tableProps";
+import { useLocation } from "react-router-dom";
 
-// FIX: Cambiado el tipo genérico de 'unknown' a 'any'
+
 export default function Table<T extends Record<string, any>>({
     headers,
     headerLabels = {},
@@ -8,10 +9,16 @@ export default function Table<T extends Record<string, any>>({
     cellRenderers = {},
     rowActions,
 }: TableProps<T>) {
+    const { pathname } = useLocation();
+    const theadClass = pathname === "/customer_management"
+        ? "bg-blue-400 text-white"
+        : pathname === "/unsubscriptions"
+            ? "bg-red-800 text-white semibold"
+            : "bg-gray-200 text-black";
     return (
         <div className="overflow-x-auto fade-in">
-            <table className="min-w-full text-[13px] text-gray-800 shadow-md rounded-lg overflow-hidden bg-white border border-gray-200">
-                <thead className="bg-blue-400 text-white">
+            <table className="min-w-full text-[12px] text-gray-600 shadow-md rounded-lg overflow-hidden bg-white border border-gray-200">
+                <thead className={theadClass}>
                     <tr>
                         {headers.map((header) => (
                             <th key={String(header)} className="px-4 py-3 text-left font-semibold tracking-wide">
@@ -34,12 +41,12 @@ export default function Table<T extends Record<string, any>>({
                             </td>
                         </tr>
                     ) : (
-                        data.map((row, index) => (
+                        data.map((row) => (
                             <tr
                                 // RECOMENDACIÓN: Usa un ID único de la fila como 'key' si está disponible (ej. row.id, row.affiliationId).
                                 // Usar el 'index' es un antipatrón si la lista puede cambiar de orden, añadirse/eliminarse elementos.
                                 // Ejemplo: key={row.affiliationId || index}
-                                key={index} // Mantenemos 'index' como está si no hay un ID único garantizado.
+                                key={row.id} // Mantenemos 'index' como está si no hay un ID único garantizado.
                                 className="transition-colors duration-200 hover:bg-gray-100 even:bg-gray-50"
                             >
                                 {headers.map((header) => (
