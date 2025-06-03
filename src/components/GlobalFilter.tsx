@@ -9,17 +9,26 @@ export default function GlobalFilter({
   columnOptions
 }: GlobalFilterProps) {
   return (
-    <div className="relative my-6 mx-4 border border-gray-300 rounded-lg p-1 shadow-sm bg-white w-full md:w-auto">
 
-      <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white px-2 text-sm text-gray-600 font-medium">
+    <div className="relative border border-gray-300 rounded-lg p-2 shadow-sm bg-white">
+
+
+      <span className="absolute -top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-2 text-sm text-gray-600 font-medium">
         Filtrar por
       </span>
 
-      <div className="flex flex-col md:flex-row gap-4 items-center">
+      <div className="flex flex-row gap-2 md:gap-4 items-center">
+        {/* Selector de columna */}
         <select
           value={selectedColumn}
           onChange={(e) => onColumnChange(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="
+            w-full
+            md:w-auto
+            px-3 py-2 border border-gray-300 rounded-md shadow-sm
+            focus:outline-none focus:ring-2 focus:ring-blue-400
+            text-base sm:text-sm
+          "
         >
           {columnOptions.map((col) => (
             <option key={col.key} value={col.key}>
@@ -28,12 +37,19 @@ export default function GlobalFilter({
           ))}
         </select>
 
+        {/* Campo de búsqueda de texto */}
         <input
           type="text"
           value={filterText}
           onChange={(e) => onFilterChange(e.target.value)}
           placeholder={placeholder}
-          className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="
+            w-full
+            md:w-auto
+            px-3 py-2 border border-gray-300 rounded-md shadow-sm
+            focus:outline-none focus:ring-2 focus:ring-blue-400
+            text-base sm:text-sm
+            "
         />
       </div>
     </div>

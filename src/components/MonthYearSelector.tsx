@@ -26,9 +26,17 @@ export default function MonthYearSelector({ onChange }: MonthYearSelectorProps) 
   };
 
   return (
-    <div className="flex gap-6">
+    <div className="flex justify-center sm:justify-start gap-2 w-full sm:w-auto">
       <select
-        className="border border-gray-300 rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out bg-white hover:border-gray-400"
+        className="
+          w-full
+          sm:w-auto
+          border border-gray-300 rounded-md px-2 py-1.5
+          shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+          transition duration-150 ease-in-out bg-white hover:border-gray-400
+          text-sm
+          sm:text-base
+        "
         value={month}
         onChange={handleMonthChange}
       >
@@ -38,16 +46,24 @@ export default function MonthYearSelector({ onChange }: MonthYearSelectorProps) 
       </select>
 
       <select
-        className="border border-gray-300 rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out bg-white hover:border-gray-400"
+        className="
+          w-full
+          sm:w-auto
+          border border-gray-300 rounded-md px-2 py-1.5
+          shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+          transition duration-150 ease-in-out bg-white hover:border-gray-400
+          text-sm
+          sm:text-base
+        "
         value={year}
         onChange={handleYearChange}
       >
         {Array.from({ length: 10 }, (_, i) => {
-          const y = 2022 + i;
+          const currentYear = new Date().getFullYear();
+          const y = currentYear - 5 + i; 
           return <option key={y} value={y}>{y}</option>;
         })}
       </select>
     </div>
-
   );
-};
+}
