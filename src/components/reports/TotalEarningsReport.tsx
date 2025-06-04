@@ -143,23 +143,11 @@ export default function TotalEarningsReport({ currentOfficeId, currentUserId, of
     if (!reportData || nivoChartData.length === 0) return <div className="text-center p-8 text-gray-600">No hay datos de ganancias para el período seleccionado.</div>;
 
     return (
-        // Contenedor principal del reporte
-        // max-w-sm: limita el ancho máximo en pantallas pequeñas
-        // md:max-w-md: más ancho en pantallas medianas
-        // lg:max-w-lg: aún más ancho en pantallas grandes
-        // xl:max-w-xl: un poco más ancho en pantallas muy grandes
-        // w-full: siempre ocupa el 100% del ancho disponible de su padre (hasta el max-w)
-        // mx-auto: centra el componente horizontalmente si hay espacio
-        // p-4 md:p-6 lg:p-8: padding responsivo
-        <div className="max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl w-full mx-auto p-4 md:p-6 lg:p-8 rounded-md border border-gray-200 bg-white shadow-lg">
-            <h1 className="text-xl md:text-2xl font-bold mb-6 text-gray-800 text-center">
+       
+        <div className="max-w-sm p-4 md:p-6 rounded-md border border-gray-200 bg-white shadow-lg">
+            <h1 className="text-xl md:text-2xl font-bold  text-gray-800 text-center">
                 {officeName || "Reporte de Ganancias"} {/* Título por defecto si officeName no está */}
             </h1>
-
-            {/* Controles de Selección de Mes y Año de Referencia */}
-            {/* flex-col sm:flex-row: apila en móvil, en fila a partir de sm */}
-            {/* gap-4 sm:gap-6: espacio entre elementos responsivo */}
-            {/* justify-center: centra los selectores */}
             <div className="mb-8 p-4 bg-white rounded-lg shadow-sm flex flex-col sm:flex-row gap-4 sm:gap-6 items-center justify-center">
                 <div className="w-full sm:w-auto"> {/* w-full para móvil, auto para sm+ */}
                     <label htmlFor="month-select" className="block text-sm font-medium text-gray-700 mb-1">Mes de Referencia:</label>
@@ -189,11 +177,9 @@ export default function TotalEarningsReport({ currentOfficeId, currentUserId, of
                 </div>
             </div>
 
-            {/* Contenedor del Gráfico de Barras de Ganancias */}
-            {/* h-[300px] md:h-[400px] lg:h-[500px]: Altura responsiva */}
-            {/* w-full: Ocupa el 100% del ancho disponible */}
-            <div className="bg-white rounded-lg shadow-sm p-6 h-[300px] md:h-[400px] lg:h-[500px] w-full flex flex-col">
-                <h2 className="text-lg md:text-xl font-semibold mb-4 text-gray-700 text-center">
+          
+            <div className="bg-white rounded-lg shadow-sm h-[280px]  w-full flex flex-col">
+                <h2 className="text-lg md:text-xl font-semibold text-gray-700 text-center">
                     Ganancias Totales por Mes
                 </h2>
                 <div className="flex-grow"> {/* Permite que Nivo ocupe el espacio restante */}

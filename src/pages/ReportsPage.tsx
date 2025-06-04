@@ -5,8 +5,7 @@ import TotalEarningsReport from "../components/reports/TotalEarningsReport";
 
 export default function ReportsPage() {
   return (
-    <div className="md:flex fade-in w-full">
-      
+    <div className="flex flex-col justify-center md:flex-row gap-4 md:gap-12 fade-in p-5">
       <TotalEarningsReport currentOfficeId={1} currentUserId={3} officeName="Construvida AYJ" />
       <TotalEarningsReport currentOfficeId={2} currentUserId={2} officeName="Salud Proactiva" />
     </div>
