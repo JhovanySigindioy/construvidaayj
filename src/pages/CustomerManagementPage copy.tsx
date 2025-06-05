@@ -18,7 +18,8 @@ import ModalFormCreate from "../components/ModalFormCreate";
 
 // === Helpers ===
 const headers: (keyof DataClient)[] = [
-    'paid',
+    'clientId',
+    'affiliationId',
     'fullName',
     'identification',
     'companyName',
@@ -32,12 +33,12 @@ const headers: (keyof DataClient)[] = [
     'ccf',
     'pensionFund',
     'observation',
-    'clientId',
-    'affiliationId',
+    'paid'
 ];
 
 const headerLabels: Record<keyof DataClient, string> = {
-    paid: '¿Pagado?',
+    clientId: 'ID Cliente',
+    affiliationId: 'ID Afiliación',
     fullName: 'Nombre completo',
     identification: 'Cédula',
     companyName: "Empresa",
@@ -51,9 +52,7 @@ const headerLabels: Record<keyof DataClient, string> = {
     ccf: 'CCF',
     pensionFund: 'Fondo pensión',
     observation: 'Observación',
-    clientId: 'ID Cliente',
-    affiliationId: 'ID Afiliación',
-    
+    paid: '¿Pagado?',
 };
 
 export default function CustomerManagementPage() {
@@ -89,7 +88,7 @@ export default function CustomerManagementPage() {
     // Default visible headers for mobile might be fewer
     const [visibleHeaders, setVisibleHeaders] = useState<(keyof DataClient)[]>(() => {
         // Show essential columns by default, hide others for mobile
-        const defaultMobileHeaders: (keyof DataClient)[] = ['paid', 'fullName', 'identification', 'companyName', 'phones', ];
+        const defaultMobileHeaders: (keyof DataClient)[] = ['fullName', 'identification', 'companyName', 'phones', 'paid'];
         // You might want to detect screen size here or use a media query hook
         // For simplicity, let's start with all headers and let the ColumnSelector handle it.
         // If you want a mobile-first approach, uncomment and adjust the logic below:
