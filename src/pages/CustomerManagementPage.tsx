@@ -279,28 +279,27 @@ export default function CustomerManagementPage() {
 
     return (
         <>
-           
             <div className="w-full max-w-screen-2xl mx-auto px-4 py-6 md:px-8 lg:px-12 fade-in">
                 <div className="flex gap-4 justify-between items-center mb-4">
-                        <ColumnSelector
-                            visibleHeaders={visibleHeaders}
-                            setVisibleHeaders={setVisibleHeaders}
-                            headerLabels={headerLabels}
-                        />
-                        <GlobalFilter
-                            filterText={filterText}
-                            onFilterChange={(value) => {
-                                setFilterText(value);
-                                setCurrentPage(1);
-                            }}
-                            selectedColumn={selectedColumn}
-                            onColumnChange={(col) => {
-                                setSelectedColumn(col);
-                                setCurrentPage(1);
-                            }}
-                            columnOptions={columnOptions}
-                        />
-                    
+                    <ColumnSelector
+                        visibleHeaders={visibleHeaders}
+                        setVisibleHeaders={setVisibleHeaders}
+                        headerLabels={headerLabels}
+                    />
+                    <GlobalFilter
+                        filterText={filterText}
+                        onFilterChange={(value) => {
+                            setFilterText(value);
+                            setCurrentPage(1);
+                        }}
+                        selectedColumn={selectedColumn}
+                        onColumnChange={(col) => {
+                            setSelectedColumn(col);
+                            setCurrentPage(1);
+                        }}
+                        columnOptions={columnOptions}
+                    />
+
                 </div>
                 <div className="flex justify-between items-center mb-4 gap-4">
                     <MonthYearSelector onChange={handleMonthYearChange} />
@@ -329,7 +328,7 @@ export default function CustomerManagementPage() {
                 {/* Tabla de datos y Paginación */}
                 {!isLoading && !error && filteredData.length > 0 && (
                     <>
-                      
+
                         <div className="overflow-x-auto rounded-lg shadow-lg">
                             <Table<DataClient>
                                 headers={visibleHeaders}
@@ -358,7 +357,7 @@ export default function CustomerManagementPage() {
                                                     if (!response.ok) {
                                                         throw new Error('Error al actualizar en el servidor');
                                                     }
-                                                    refetch(); 
+                                                    refetch();
                                                 } catch (error) {
                                                     console.error('Error actualizando estado de pago:', error);
                                                     setLocalData((prev) =>
@@ -372,11 +371,11 @@ export default function CustomerManagementPage() {
                                                 }
                                             }}
                                             className={`rounded-full px-2 py-1 text-sm font-semibold border-none focus:outline-none transition-colors duration-200
-                                                ${value === 'Pagado' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}
-                                                min-w-[100px] text-center`}
+${value === 'Pagado' ? 'bg-green-100 text-green-800' : value === 'Pendiente' ? 'bg-yellow-100 text-yellow-800' : value === 'En Proceso' ? 'bg-sky-100 text-blue-800' : 'bg-gray-100 text-gray-800'} min-w-[100px] text-center`}
                                         >
-                                            <option value="Pagado">Pagado</option>
                                             <option value="Pendiente">Pendiente</option>
+                                            <option value="En Proceso">En Proceso</option>
+                                            <option value="Pagado">Pagado</option>
                                         </select>
                                     ),
                                     phones: (value: string | number | string[] | [] | undefined) => {

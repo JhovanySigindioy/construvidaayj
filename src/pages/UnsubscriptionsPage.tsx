@@ -195,14 +195,13 @@ export default function UnsubscriptionsPage() {
 
     return (
         <>
-            <div className="w-full max-w-7xl mx-auto px-4 fade-in">
-                <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-2">
+            <div className="w-full max-w-screen-2xl mx-auto px-4 py-6 md:px-8 lg:px-12 fade-in">
+                <div className="flex gap-4 justify-between items-center mb-4">
                     <ColumnSelector
                         visibleHeaders={visibleHeaders}
                         setVisibleHeaders={setVisibleHeaders}
                         headerLabels={headerLabels}
                     />
-
                     <GlobalFilter
                         filterText={filterText}
                         onFilterChange={(value) => {
@@ -216,17 +215,10 @@ export default function UnsubscriptionsPage() {
                         }}
                         columnOptions={columnOptions}
                     />
-                </div>
 
+                </div>
                 <div className="flex justify-between items-center mb-4">
                     <MonthYearSelector onChange={handleMonthYearChange} />
-                    {/* Eliminar el botón de "Afiliación" (+) */}
-                    {/* <button
-                            onClick={openModalCreate}
-                            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300">
-                            <FaPlus className="text-white" />
-                            Afiliación
-                        </button> */}
                 </div>
 
                 {isLoading && <Loading label="Cargando datos..." />}
@@ -246,7 +238,7 @@ export default function UnsubscriptionsPage() {
                 {!isLoading && !error && filteredData.length > 0 && (
                     <>
                         <Table<UnsubscribedAffiliationData>
-                           
+
                             headers={visibleHeaders}
                             data={paginatedData}
                             headerLabels={headerLabels}

@@ -19,7 +19,7 @@ type FormData = {
   ccf: string;
   pensionFund: string;
   observation: string;
-  paid: "Pendiente" | "Pagado";
+  paid: "Pendiente" | "Pagado" | "En Proceso";
   datePaidReceived: string;
   govRegistryCompletedAt: string; // Agrega este campo
 };

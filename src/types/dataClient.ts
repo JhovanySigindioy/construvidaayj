@@ -1,4 +1,4 @@
-export type PaymentStatus = 'Pagado' | 'Pendiente';
+export type PaymentStatus = "Pagado" | "Pendiente" | "En Proceso";
 
 export type DataClient = {
   clientId: string;
