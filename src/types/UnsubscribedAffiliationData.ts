@@ -1,3 +1,6 @@
+// Define los estados posibles para el campo 'paid' para mejorar la seguridad de tipo
+export type PaymentStatus = 'Pagado' | 'Pendiente' | 'En Proceso';
+
 export interface UnsubscribedAffiliationData {
     // === Campos de la Afiliación Original ===
     clientId: number;
@@ -12,17 +15,17 @@ export interface UnsubscribedAffiliationData {
     value: number;
     eps: string | null; // Nombre de la EPS
     arl: string | null; // Nombre de la ARL
-    risk: string | null;    
+    risk: string | null;
     ccf: string | null; // Nombre de la CCF
     pensionFund: string | null; // Nombre del Fondo de Pensión
     observation: string | null; // Observación de la afiliación original
-    paid: 'Pagado' | 'Pendiente' | string; // Estado de pago de la afiliación original
-
+    paid: PaymentStatus; // Estado de pago de la afiliación original (Ahora usa PaymentStatus)
+    paymentMethodName: string | null; // Nombre del método de pago (Añadido para consistencia con CustomerManagementPage)
+    talonNumber: string;
     // === Campos de Desafiliación / Historial ===
     deletedAt: string | null; // Fecha en que la afiliación fue marcada como inactiva (YYYY-MM-DD)
     deletedByUserName: string | null; // Nombre del usuario que la desactivó
 
-    // **¡NUEVO CAMPO CRUCIAL!**
     unsubscriptionRecordId: number | null; // ID del registro en clients_unsubscriptions
 
     unsubscriptionDate: string | null; // Fecha de la desafiliación del registro clients_unsubscriptions (YYYY-MM-DD)

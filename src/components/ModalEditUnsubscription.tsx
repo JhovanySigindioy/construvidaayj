@@ -3,6 +3,7 @@ import Swal from 'sweetalert2';
 import { Dialog, Transition } from '@headlessui/react';
 import { UnsubscribedAffiliationData } from '../types/UnsubscribedAffiliationData';
 import { urlBase } from '../globalConfig/config';
+import { useAuth } from '../context/AuthContext';
 
 interface ModalEditUnsubscriptionProps {
     isOpen: boolean;
@@ -16,6 +17,7 @@ export default function ModalEditUnsubscription({ isOpen, onClose, refetch, unsu
     const [cost, setCost] = useState<number>(0);
     const [observation, setObservation] = useState<string>('');
     const [loading, setLoading] = useState<boolean>(false);
+    const { user } = useAuth();
 
     useEffect(() => {
         if (isOpen && unsubscriptionData) {
@@ -47,6 +49,7 @@ export default function ModalEditUnsubscription({ isOpen, onClose, refetch, unsu
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${user?.token}`
                 },
                 body: JSON.stringify(payload),
             });

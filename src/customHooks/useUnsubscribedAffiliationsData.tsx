@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { UnsubscribedAffiliationData } from '../types/UnsubscribedAffiliationData'; // Asegúrate de que esta ruta sea correcta
 import { urlBase } from '../globalConfig/config'; // Asegúrate de que esta ruta sea correcta
+import { useAuth } from '../context/AuthContext';
 
 interface UseUnsubscribedAffiliationsDataProps {
     month: number;
@@ -15,11 +16,12 @@ interface UseUnsubscribedAffiliationsDataReturn {
 }
 
 export function useUnsubscribedAffiliationsData({ month, year }: UseUnsubscribedAffiliationsDataProps): UseUnsubscribedAffiliationsDataReturn {
+
     const [data, setData] = useState<UnsubscribedAffiliationData[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [triggerRefetch, setTriggerRefetch] = useState(0); // Para forzar la recarga
-
+    const { user } = useAuth();
     const fetchData = useCallback(async () => {
         setIsLoading(true);
         setError(null);
@@ -52,10 +54,13 @@ export function useUnsubscribedAffiliationsData({ month, year }: UseUnsubscribed
                 userId: userId.toString(),
             });
 
-            // *** Realizar la llamada fetch al endpoint correcto ***
-            // Ajusta la ruta si es diferente, basado en el archivo route.ts
-            // Ej: /api/unsubscribed-affiliations o /api/affiliations/history/inactive
-            const response = await fetch(`${urlBase}/affiliations/history/inactive?${params.toString()}`); 
+            const response = await fetch(`${urlBase}/affiliations/history/inactive?${params.toString()}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${user?.token}` // <-- Usando user.access_token
+                },
+            });
             const result = await response.json();
 
             if (!response.ok) {

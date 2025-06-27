@@ -1,7 +1,6 @@
 import { TableProps } from "../interfaces/tableProps";
 import { useLocation } from "react-router-dom";
 
-
 export default function Table<T extends Record<string, any>>({
     headers,
     headerLabels = {},
@@ -21,10 +20,10 @@ export default function Table<T extends Record<string, any>>({
                 <thead className={theadClass + " sticky top-0 z-10"}>
                     <tr>
                         {rowActions && (
-                            <th className="px-6 py-4 text-left font-bold tracking-wide border-b border-gray-300">Acciones</th>
+                            <th className="px-1 md:px-6 py-4 text-left font-bold tracking-wide border-b border-gray-300">Acciones</th>
                         )}
                         {headers.map((header) => (
-                            <th key={String(header)} className="px-6 py-4 text-left font-bold tracking-wide whitespace-nowrap border-b border-gray-300">
+                            <th key={String(header)} className="px-1 md:px-6 py-4 text-left font-bold tracking-wide whitespace-nowrap border-b border-gray-300">
                                 {String(headerLabels[header] || header)}
                             </th>
                         ))}
@@ -47,10 +46,10 @@ export default function Table<T extends Record<string, any>>({
                                 className="transition-colors duration-150 hover:bg-slate-100 even:bg-gray-50 odd:bg-white border-b border-gray-100"
                             >
                                 {rowActions && (
-                                    <td className="px-6 py-3 align-middle">{rowActions(row)}</td>
+                                    <td className="px-1 md:px-6 py-3 align-middle">{rowActions(row)}</td>
                                 )}
                                 {headers.map((header) => (
-                                    <td key={String(header)} className="px-6 py-3 align-middle">
+                                    <td key={String(header)} className="px-1 md:px-6 py-3 align-middle">
                                         {cellRenderers[header]
                                             ? cellRenderers[header]!(row[header], row)
                                             : String(row[header])}

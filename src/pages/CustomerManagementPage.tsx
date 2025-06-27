@@ -1,24 +1,27 @@
-// app/components/reports/CustomerManagementPage.tsx
 import Swal from "sweetalert2";
-import { useState, useMemo, useEffect, useCallback } from 'react'; // Agregamos useCallback
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import MonthYearSelector from '../components/MonthYearSelector';
 import Table from '../components/Table';
 import Pagination from '../components/Pagination';
 import ColumnSelector from '../components/ColumnSelector';
 import GlobalFilter from '../components/GlobalFilter';
 import { FiEdit, FiTrash2 } from 'react-icons/fi';
-import { useClientsData } from '../customHooks/useClienteDataTable';
-import { DataClient, PaymentStatus } from '../types/dataClient';
+import { useClientsData } from '../customHooks/useClienteDataTable'; // Asegúrate de que la ruta sea correcta
+import { DataClient, PaymentStatus } from '../types/dataClient'; // Asegúrate de que la ruta sea correcta
 import ModalForm from '../components/ModalForm';
 import Loading from "../components/Loading";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext"; // Import useAuth
 import { urlBase } from "../globalConfig/config";
 import { FaPlus } from "react-icons/fa";
 import ModalFormCreate from "../components/ModalFormCreate";
 
 // === Helpers ===
-const headers: (keyof DataClient)[] = [
+// Define ALL possible headers, including those that might be hidden for certain roles
+const allPossibleHeaders: (keyof DataClient)[] = [
     'paid',
+    'paymentMethodName',
+    'talonNumber',
+    'observation',
     'fullName',
     'identification',
     'companyName',
@@ -31,13 +34,15 @@ const headers: (keyof DataClient)[] = [
     'risk',
     'ccf',
     'pensionFund',
-    'observation',
-    'clientId',
-    'affiliationId',
+    // 'clientId', // ID de cliente, no se muestra en la tabla
+    // 'affiliationId', // ID de afiliación, no se muestra en la tabla
 ];
 
 const headerLabels: Record<keyof DataClient, string> = {
     paid: '¿Pagado?',
+    paymentMethodName: 'Metodo de Pago',
+    talonNumber: 'No. Factura',
+    observation: 'Observación',
     fullName: 'Nombre completo',
     identification: 'Cédula',
     companyName: "Empresa",
@@ -50,68 +55,88 @@ const headerLabels: Record<keyof DataClient, string> = {
     risk: 'Riesgo',
     ccf: 'CCF',
     pensionFund: 'Fondo pensión',
-    observation: 'Observación',
-    clientId: 'ID Cliente',
-    affiliationId: 'ID Afiliación',
-    
+    clientId: 'ID Cliente', // Se mantiene el label para referencia, aunque la columna no se muestre
+    affiliationId: 'ID Afiliación', // Se mantiene el label para referencia, aunque la columna no se muestre
 };
 
 export default function CustomerManagementPage() {
-    const [isModalCreateOpen, setIsModalCreateOpen] = useState(false);
-    const openModalCreate = () => setIsModalCreateOpen(true);
-    const closeModalCreate = () => {
-        setIsModalCreateOpen(false);
-        refetch(); // Refetch data after creating a new client
-    };
-
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const openModal = () => setIsModalOpen(true);
-    const closeModal = () => {
-        setIsModalOpen(false);
-        setSelectedClient(null); // Clear selected client on close
-        refetch(); // Refetch data after editing
-    };
-
-    const [selectedClient, setSelectedClient] = useState<DataClient | null>(null);
-
+    const [loadingPaidIds, setLoadingPaidIds] = useState<number[]>([]);
     const today = new Date();
     const [selectedMonth, setSelectedMonth] = useState(today.getMonth());
     const [selectedYear, setSelectedYear] = useState(today.getFullYear());
+
+    const { user } = useAuth(); // Obtener el usuario del contexto de autenticación
+
+    // Determine initial headers based on user role
+    const initialDefaultHeaders = useMemo(() => {
+        // IMPORTANT: Adjust 'admin' and user.role property as per your actual user object structure
+        // If the user has an 'admin' role, filter out 'talonNumber' and 'paymentMethodName'
+        if (user?.role === 'admin') {
+            return allPossibleHeaders.filter(
+                (header) => header !== 'talonNumber' && header !== 'paymentMethodName'
+            );
+        }
+        return allPossibleHeaders;
+    }, [user]); // Re-calculate if user object changes (e.g., after login or role update)
+
+    const [visibleHeaders, setVisibleHeaders] = useState<(keyof DataClient)[]>(initialDefaultHeaders);
+
+    // Effect to reset visibleHeaders if user role changes dynamically
+    useEffect(() => {
+        setVisibleHeaders(initialDefaultHeaders);
+    }, [initialDefaultHeaders]);
+
 
     const { data, isLoading, error, refetch } = useClientsData({
         month: selectedMonth + 1,
         year: selectedYear,
     });
 
+    const [isModalCreateOpen, setIsModalCreateOpen] = useState(false);
+    const openModalCreate = () => setIsModalCreateOpen(true);
+    const closeModalCreate = () => {
+        setIsModalCreateOpen(false);
+    };
+
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const openModal = () => setIsModalOpen(true);
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setSelectedClient(null); // Limpiar cliente seleccionado al cerrar
+    };
+
+    const [selectedClient, setSelectedClient] = useState<DataClient | null>(null);
     const [localData, setLocalData] = useState<DataClient[]>([]);
     const [filterText, setFilterText] = useState('');
     const [selectedColumn, setSelectedColumn] = useState('all');
-    // Default visible headers for mobile might be fewer
-    const [visibleHeaders, setVisibleHeaders] = useState<(keyof DataClient)[]>(() => {
-        // Show essential columns by default, hide others for mobile
-        const defaultMobileHeaders: (keyof DataClient)[] = ['paid', 'fullName', 'identification', 'companyName', 'phones', ];
-        // You might want to detect screen size here or use a media query hook
-        // For simplicity, let's start with all headers and let the ColumnSelector handle it.
-        // If you want a mobile-first approach, uncomment and adjust the logic below:
-        // if (window.innerWidth < 768) { // Example breakpoint
-        //    return defaultMobileHeaders;
-        // }
-        return headers;
-    });
+
     const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
-    const { user } = useAuth();
 
+
+    // Sincroniza localData con los datos de useClientsData
     useEffect(() => {
         setLocalData(data);
     }, [data]);
 
+    console.log("DATA EN PARA LA TABLA", JSON.stringify(data, null, 2));
+
     const columnOptions = useMemo(() => {
+        // Generate column options based on `allPossibleHeaders`
+        // and filter them out if the user is an admin for the selector.
+        let availableHeadersForSelection = allPossibleHeaders;
+
+        if (user?.role === 'admin') { // IMPORTANT: Adjust 'admin' and user.role property as per your actual user object structure
+            availableHeadersForSelection = allPossibleHeaders.filter(
+                (header) => header !== 'talonNumber' && header !== 'paymentMethodName'
+            );
+        }
+
         return [{ key: 'all', label: 'Todas las columnas' }].concat(
-            headers.map((key) => ({ key, label: headerLabels[key] }))
+            availableHeadersForSelection.map((key) => ({ key, label: headerLabels[key] }))
         );
-    }, []);
+    }, [user]); // Depend on user to update options if role changes
 
     const filteredData = useMemo(() => {
         const lowerFilter = filterText.toLowerCase();
@@ -119,31 +144,44 @@ export default function CustomerManagementPage() {
             const globalMatch =
                 filterText === '' ||
                 (selectedColumn === 'all'
-                    ? visibleHeaders.some((key) => {
-                        // Handle array of phones for global filter
+                    ? visibleHeaders.some((key) => { // Use visibleHeaders here for filtering logic
+                        // Maneja el array de teléfonos para el filtro global
                         if (key === 'phones' && Array.isArray(item[key])) {
                             return (item[key] as string[]).some(phone => String(phone).toLowerCase().includes(lowerFilter));
                         }
+                        // Ensure we don't try to access properties that are intentionally hidden
+                        if (!Object.keys(item).includes(key as string)) return false; // Safety check
                         return String(item[key] ?? '').toLowerCase().includes(lowerFilter);
                     })
-                    : String(item[selectedColumn as keyof DataClient] ?? '')
-                        .toLowerCase()
-                        .includes(lowerFilter));
+                    : (() => {
+                        // If the selected column is one of the hidden ones, it won't be in visibleHeaders, so it won't match
+                        if (!visibleHeaders.includes(selectedColumn as keyof DataClient)) return true; // If selected is a hidden column, global filter should not break it.
+
+                        const value = item[selectedColumn as keyof DataClient];
+                        if (selectedColumn === 'phones' && Array.isArray(value)) {
+                            return value.some(phone => String(phone).toLowerCase().includes(lowerFilter));
+                        }
+                        return String(value ?? '').toLowerCase().includes(lowerFilter);
+                    })());
 
             const columnMatch = Object.entries(columnFilters).every(([key, value]) => {
                 if (!value) return true;
-                // Handle array of phones for column filter
-                if (key === 'phones' && Array.isArray(item[key])) {
-                    return (item[key] as string[]).some(phone => String(phone).toLowerCase().includes(value.toLowerCase()));
+                // Ensure we don't try to access properties that are intentionally hidden
+                if (!visibleHeaders.includes(key as keyof DataClient)) return true; // If filtered column is hidden, treat as always matching.
+
+                const itemValue = item[key as keyof DataClient];
+                // Maneja el array de teléfonos para el filtro por columna
+                if (key === 'phones' && Array.isArray(itemValue)) {
+                    return (itemValue as string[]).some(phone => String(phone).toLowerCase().includes(value.toLowerCase()));
                 }
-                return String(item[key as keyof DataClient] ?? '')
+                return String(itemValue ?? '')
                     .toLowerCase()
                     .includes(value.toLowerCase());
             });
 
             return globalMatch && columnMatch;
         });
-    }, [localData, filterText, selectedColumn, visibleHeaders, columnFilters]);
+    }, [localData, filterText, selectedColumn, visibleHeaders, columnFilters]); // Added visibleHeaders to dependencies
 
     const paginatedData = useMemo(() => {
         const start = (currentPage - 1) * itemsPerPage;
@@ -155,7 +193,7 @@ export default function CustomerManagementPage() {
     const handleEdit = useCallback((item: DataClient) => {
         setSelectedClient(item);
         openModal();
-    }, []); // No dependencies needed as openModal is a constant function
+    }, [openModal]);
 
     const handleDelete = useCallback(async (item: DataClient) => {
         Swal.fire({
@@ -167,116 +205,98 @@ export default function CustomerManagementPage() {
             cancelButtonColor: '#3085d6',
             confirmButtonText: 'Sí, eliminar',
             cancelButtonText: 'Cancelar',
-            reverseButtons: true // Makes "Cancel" on the left and "Delete" on the right
+            reverseButtons: true
         }).then(async (result) => {
             if (!result.isConfirmed) return;
 
-            if (!user || !user.id) {
-                Swal.fire('Error!', 'No se encontró el ID de usuario en la sesión.', 'error');
+            if (!user || !user.id || !user.token) { // Verifica la información del usuario
+                Swal.fire('Error!', 'No se encontró la información de autenticación del usuario.', 'error');
                 return;
             }
 
             console.log(`VALORES DE ELIMINACION:
-                ID AFILIACION: ${item.affiliationId}
-                ID USUARIO LOGUEADO: ${user.id}
-            `);
+            ID AFILIACION: ${item.affiliationId}
+            ID USUARIO LOGUEADO: ${user.id}
+        `);
 
             try {
-                const safeJson = async (response: Response) => {
-                    const text = await response.text();
-                    try {
-                        return text ? JSON.parse(text) : {};
-                    } catch {
-                        return {};
-                    }
-                };
-
-                // DELETE - eliminar afiliación
                 const deleteResponse = await fetch(`${urlBase}/affiliations`, {
                     method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${user.token}`
+                    },
                     body: JSON.stringify({
                         affiliationId: item.affiliationId,
                         userId: user.id,
+                        reason: 'Desafiliación por eliminación de registro en el sistema (frontend)',
+                        cost: 0.00
                     }),
                 });
 
-                const deleteData = await safeJson(deleteResponse);
+                const deleteData = await deleteResponse.json();
 
                 if (!deleteResponse.ok) {
+                    console.error('Error del backend al eliminar/desafiliar:', deleteData.message || 'Error desconocido.');
                     Swal.fire(
                         'Error!',
-                        deleteData.message || 'Hubo un error al eliminar la afiliación.',
+                        deleteData.message || 'Hubo un error al eliminar la afiliación y registrar la desafiliación.',
                         'error'
                     );
                     return;
                 }
 
-                // POST - registrar desafiliación (Moved inside the try block)
-                const unsubscriptionResponse = await fetch(`${urlBase}/affiliations/unsubscriptions`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        affiliationId: item.affiliationId,
-                        reason: 'Desafiliación por eliminación de registro en el sistema',
-                        cost: 0.00, // Or retrieve from data if applicable
-                        processedBy: user.id,
-                        observation: `Eliminación de afiliación de ${item.fullName} (ID: ${item.affiliationId}) por el usuario ${user.id}`,
-                    }),
-                });
+                console.log('Respuesta exitosa del backend:', deleteData.message);
 
-                const unsubscriptionData = await safeJson(unsubscriptionResponse);
-
-                if (!unsubscriptionResponse.ok) {
-                    // Log the error but proceed with refetch as main deletion is successful
-                    console.error('Error al registrar desafiliación:', unsubscriptionData.message || 'Error desconocido.');
-                    Swal.fire(
-                        'Advertencia!',
-                        'Afiliación eliminada, pero hubo un problema al registrar la desafiliación. Por favor, contacta a soporte.',
-                        'warning'
-                    );
-                } else {
-                    Swal.fire(
-                        'Eliminado!',
-                        `${item.fullName} ha sido eliminado correctamente y desafiliado.`,
-                        'success'
-                    );
-                }
+                Swal.fire(
+                    'Eliminado!',
+                    `${item.fullName} ha sido eliminado correctamente y desafiliado.`,
+                    'success'
+                );
 
                 setLocalData((prevClients) =>
                     prevClients.filter((client) => client.affiliationId !== item.affiliationId)
                 );
-                // No es necesario refetch aquí si el delete se hizo en el frontend,
-                // pero si quieres asegurar la consistencia, un refetch es válido.
-                // refetch(); // Consider if this is truly needed after local data update
+
             } catch (error) {
-                console.error("Error en la eliminación:", error);
+                console.error("Error en la eliminación (conexión/parsing):", error);
                 Swal.fire(
                     'Error!',
-                    'Hubo un problema con la conexión al servidor o al procesar la respuesta.',
+                    'Hubo un problema con la conexión al servidor o al procesar la respuesta. Revisa la consola para más detalles.',
                     'error'
                 );
             }
         });
-    }, [user, refetch]); // Added user and refetch to useCallback dependencies
+    }, [user, setLocalData]);
 
     const handleMonthYearChange = useCallback((month: number, year: number) => {
-        const isSameMonth = month === selectedMonth;
-        const isSameYear = year === selectedYear;
-
         setSelectedMonth(month);
         setSelectedYear(year);
         setCurrentPage(1);
-
-        if (isSameMonth && isSameYear) {
-            refetch();
-        }
-    }, [selectedMonth, selectedYear, refetch]); // Added refetch to dependencies
+    }, []);
 
     useEffect(() => {
         setCurrentPage(1);
     }, [columnFilters]);
 
+    const renderDateBadge = (
+        date: string | null | undefined,
+        color: 'green' | 'blue' | 'yellow' = 'yellow'
+    ) => {
+        const dateText = date ? new Date(date).toLocaleDateString('es-CO') : 'N/A';
+
+        const colorClasses = {
+            green: 'bg-green-100 text-green-600',
+            blue: 'bg-sky-100 text-blue-600',
+            yellow: 'bg-yellow-100 text-yellow-600',
+        };
+
+        return (
+            <span className={`rounded-full px-2 py-1 text-sm font-semibold min-w-[100px] text-center ${colorClasses[color]}`}>
+                {dateText}
+            </span>
+        );
+    };
 
     return (
         <>
@@ -300,10 +320,10 @@ export default function CustomerManagementPage() {
                         }}
                         columnOptions={columnOptions}
                     />
-
                 </div>
                 <div className="flex justify-between items-center mb-4 gap-4">
                     <MonthYearSelector onChange={handleMonthYearChange} />
+                    
                     <button
                         onClick={openModalCreate}
                         className="sm:w-auto flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 transform hover:scale-105"
@@ -329,56 +349,141 @@ export default function CustomerManagementPage() {
                 {/* Tabla de datos y Paginación */}
                 {!isLoading && !error && filteredData.length > 0 && (
                     <>
-
+                    
                         <div className="overflow-x-auto rounded-lg shadow-lg">
                             <Table<DataClient>
-                                headers={visibleHeaders}
+                                headers={visibleHeaders} // Use visibleHeaders here
                                 data={paginatedData}
                                 headerLabels={headerLabels}
                                 cellRenderers={{
-                                    paid: (value, item) => (
-                                        <select
-                                            value={value}
-                                            onChange={async (e) => {
-                                                const newPaid: PaymentStatus = e.target.value as PaymentStatus;
-                                                setLocalData((prev) =>
-                                                    prev.map((p) =>
-                                                        p.affiliationId === item.affiliationId
-                                                            ? { ...p, paid: newPaid }
-                                                            : p
-                                                    )
-                                                );
-                                                try {
-                                                    const response = await fetch(`${urlBase}/affiliations/paid`, {
-                                                        method: 'PUT',
-                                                        headers: { 'Content-Type': 'application/json' },
-                                                        body: JSON.stringify({ affiliationId: item.affiliationId, paid: newPaid }),
-                                                    });
+                                    paid: (value, item) => {
+                                        const loading = loadingPaidIds.includes(item.affiliationId); // Usar `loading` en lugar de `isLoading`
 
-                                                    if (!response.ok) {
-                                                        throw new Error('Error al actualizar en el servidor');
-                                                    }
-                                                    refetch();
-                                                } catch (error) {
-                                                    console.error('Error actualizando estado de pago:', error);
-                                                    setLocalData((prev) =>
-                                                        prev.map((p) =>
-                                                            p.affiliationId === item.affiliationId
-                                                                ? { ...p, paid: item.paid }
-                                                                : p
-                                                        )
-                                                    );
-                                                    Swal.fire('Error', 'Error al actualizar el estado de pago. Por favor, intenta nuevamente.', 'error');
-                                                }
-                                            }}
-                                            className={`rounded-full px-2 py-1 text-sm font-semibold border-none focus:outline-none transition-colors duration-200
-${value === 'Pagado' ? 'bg-green-100 text-green-800' : value === 'Pendiente' ? 'bg-yellow-100 text-yellow-800' : value === 'En Proceso' ? 'bg-sky-100 text-blue-800' : 'bg-gray-100 text-gray-800'} min-w-[100px] text-center`}
-                                        >
-                                            <option value="Pendiente">Pendiente</option>
-                                            <option value="En Proceso">En Proceso</option>
-                                            <option value="Pagado">Pagado</option>
-                                        </select>
-                                    ),
+                                        return (
+                                            <div className="relative">
+                                                <select
+                                                    value={value as PaymentStatus} // Asegura el tipado para el select
+                                                    disabled={loading} // Usar el estado de carga específico para el elemento
+                                                    onChange={async (e) => {
+                                                        const newPaid: PaymentStatus = e.target.value as PaymentStatus;
+                                                        const prevPaid = value as PaymentStatus; // Guardar el valor anterior por si hay error
+                                                        const id = item.affiliationId;
+
+                                                        // Actualización optimista
+                                                        setLocalData((prev) =>
+                                                            prev.map((p) =>
+                                                                p.affiliationId === id ? { ...p, paid: newPaid } : p
+                                                            )
+                                                        );
+
+                                                        setLoadingPaidIds((prev) => [...prev, id]); // Añadir al ID de carga
+
+                                                        try {
+                                                            const response = await fetch(`${urlBase}/affiliations/paid`, {
+                                                                method: 'PUT',
+                                                                headers: {
+                                                                    'Content-Type': 'application/json',
+                                                                    'Authorization': `Bearer ${user?.token}`, // Asegúrate de que `user` y `user.token` no sean nulos
+                                                                },
+                                                                body: JSON.stringify({ affiliationId: id, paid: newPaid }),
+                                                            });
+
+                                                            if (!response.ok) {
+                                                                const errorData = await response.json();
+                                                                throw new Error(errorData.message || 'Error al actualizar en el servidor');
+                                                            }
+
+                                                            const result = await response.json();
+                                                            const updated = result.affiliation;
+
+                                                            // Actualizar con los datos del backend para reflejar cualquier cambio de fecha
+                                                            setLocalData((prev) =>
+                                                                prev.map((p) =>
+                                                                    p.affiliationId === id
+                                                                        ? {
+                                                                            ...p,
+                                                                            paid: updated.paid_status,
+                                                                            datePaidReceived: updated.date_paid_received, // Asegúrate de que el backend envíe esto
+                                                                            govRegistryCompletedAt: updated.gov_record_completed_at, // Asegúrate de que el backend envíe esto
+                                                                        }
+                                                                        : p
+                                                                )
+                                                            );
+
+                                                            // ✅ Mostrar toast de éxito
+                                                            Swal.fire({
+                                                                toast: true,
+                                                                position: 'bottom-end',
+                                                                icon: 'success',
+                                                                title: 'Pago actualizado correctamente',
+                                                                showConfirmButton: false,
+                                                                timer: 2000,
+                                                                timerProgressBar: true,
+                                                                background: 'transparent',
+                                                                didOpen: (toast) => {
+                                                                    toast.style.background = 'rgba(34,197,94,0.15)';
+                                                                    toast.style.color = '#065f46';
+                                                                    toast.style.border = '2px solid #22c55e';
+                                                                    toast.style.borderRadius = '0.5rem';
+                                                                    toast.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
+                                                                    toast.style.padding = '0.75rem 1.25rem';
+                                                                },
+                                                            });
+
+                                                        } catch (error: any) { // Capturar el error como `any` para acceder a `message`
+                                                            console.error('Error actualizando estado de pago:', error);
+
+                                                            // Revertir la actualización optimista en caso de error
+                                                            setLocalData((prev) =>
+                                                                prev.map((p) =>
+                                                                    p.affiliationId === id ? { ...p, paid: prevPaid } : p
+                                                                )
+                                                            );
+
+                                                            Swal.fire({
+                                                                toast: true,
+                                                                position: 'top-end',
+                                                                icon: 'error',
+                                                                title: error.message || 'Error al actualizar el pago', // Muestra el mensaje del error si está disponible
+                                                                showConfirmButton: false,
+                                                                timer: 2500,
+                                                                timerProgressBar: true,
+                                                                background: 'transparent',
+                                                                didOpen: (toast) => {
+                                                                    toast.style.background = 'rgba(239,68,68,0.15)';
+                                                                    toast.style.color = '#7f1d1d';
+                                                                    toast.style.border = '2px solid #ef4444';
+                                                                    toast.style.borderRadius = '0.5rem';
+                                                                    toast.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
+                                                                    toast.style.padding = '0.75rem 1.25rem';
+                                                                    toast.style.fontWeight = '600';
+                                                                },
+                                                            });
+
+                                                        } finally {
+                                                            setLoadingPaidIds((prev) => prev.filter((val) => val !== id)); // Quitar de los IDs en carga
+                                                        }
+                                                    }}
+                                                    className={`rounded-full px-2 py-1 text-sm font-semibold border-none focus:outline-none transition-colors duration-200 min-w-[100px] text-center
+                                                        ${value === 'Pagado' ? 'bg-green-100 text-green-800' :
+                                                            value === 'Pendiente' ? 'bg-yellow-100 text-yellow-800' :
+                                                                value === 'En Proceso' ? 'bg-sky-100 text-blue-800' :
+                                                                    'bg-gray-100 text-gray-800'}
+                                                        ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                >
+                                                    <option value="Pendiente">Pendiente</option>
+                                                    <option value="En Proceso">En Proceso</option>
+                                                    <option value="Pagado">Pagado</option>
+                                                </select>
+
+                                                {loading && (
+                                                    <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-50 rounded-full">
+                                                        <span className="w-4 h-4 border-2 border-t-transparent border-blue-500 rounded-full animate-spin"></span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    },
                                     phones: (value: string | number | string[] | [] | undefined) => {
                                         if (Array.isArray(value) && value.length > 0) {
                                             return (
@@ -394,24 +499,21 @@ ${value === 'Pagado' ? 'bg-green-100 text-green-800' : value === 'Pendiente' ? '
                                             return <span className="text-gray-500">Sin teléfono</span>;
                                         }
                                     },
-                                    // Añadir un renderizador para el valor, si es una moneda
                                     value: (val) => {
                                         if (typeof val === 'number') {
                                             return new Intl.NumberFormat('es-CO', {
                                                 style: 'currency',
                                                 currency: 'COP',
-                                                minimumFractionDigits: 0, // Ajusta a tus necesidades
+                                                minimumFractionDigits: 0,
                                                 maximumFractionDigits: 0,
                                             }).format(val);
                                         }
                                         return val;
                                     },
-                                    // Añadir renderizador para fechas
-                                    datePaidReceived: (val) => val ? new Date(val).toLocaleDateString('es-CO') : 'N/A',
-                                    govRegistryCompletedAt: (val) => val ? new Date(val).toLocaleDateString('es-CO') : 'N/A',
+                                    datePaidReceived: (val) => renderDateBadge(val as string | null, val ? 'blue' : 'yellow'),
+                                    govRegistryCompletedAt: (val) => renderDateBadge(val as string | null, val ? 'green' : 'yellow'),
                                 }}
                                 rowActions={(item) => (
-                                    // Los botones de acción también pueden ser más compactos en móvil
                                     <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 justify-center items-center">
                                         <button
                                             onClick={() => handleEdit(item)}
@@ -433,7 +535,7 @@ ${value === 'Pagado' ? 'bg-green-100 text-green-800' : value === 'Pendiente' ? '
                         </div>
 
                         {/* Paginación */}
-                        <div className="flex justify-center mt-6"> {/* Centrado en móvil y desktop */}
+                        <div className="flex justify-center mt-6">
                             <Pagination
                                 currentPage={currentPage}
                                 totalPages={totalPages}
@@ -443,7 +545,7 @@ ${value === 'Pagado' ? 'bg-green-100 text-green-800' : value === 'Pendiente' ? '
                     </>
                 )}
 
-                {/* Modales fuera del flujo principal, no necesitan responsividad directa */}
+                {/* Modales fuera del flujo principal */}
                 <ModalForm isOpen={isModalOpen} onClose={closeModal} client={selectedClient} refetch={refetch} />
                 <ModalFormCreate isOpen={isModalCreateOpen} onClose={closeModalCreate} refetch={refetch} />
             </div>

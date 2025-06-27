@@ -4,6 +4,7 @@ import { ResponsiveBar } from '@nivo/bar';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { urlBase } from '../../globalConfig/config'; // Asegúrate de que esta ruta sea correcta
+import { useAuth } from '../../context/AuthContext';
 
 // --- Interfaces (sin cambios significativos aquí, solo por completitud) ---
 
@@ -46,7 +47,8 @@ async function fetchTotalEarningsData(
     month: number,
     year: number,
     officeId: number,
-    userId: number
+    userId: number,
+    token: string
 ): Promise<TotalEarningsApiResponse> {
     const params = new URLSearchParams({
         month: month.toString(),
@@ -54,7 +56,15 @@ async function fetchTotalEarningsData(
         officeId: officeId.toString(),
         userId: userId.toString(),
     });
-    const response = await fetch(`${urlBase}/reports/total-earnings?${params.toString()}`);
+    const response = await fetch(
+        `${urlBase}/reports/total-earnings?${params.toString()}`,
+        {
+            method: 'GET',
+            headers: {
+                "Content-Type": "application/json",
+                'Authorization': `Bearer ${token}`
+            }
+        });
     if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Error al cargar los datos del reporte de ganancias.');
@@ -65,6 +75,7 @@ async function fetchTotalEarningsData(
 // --- React Component ---
 
 export default function TotalEarningsReport({ currentOfficeId, currentUserId, officeName }: TotalEarningsReportProps) {
+    const { user } = useAuth();
     const today = new Date();
     const [referenceMonth, setReferenceMonth] = useState<number>(today.getMonth() + 1);
     const [referenceYear, setReferenceYear] = useState<number>(today.getFullYear());
@@ -87,7 +98,8 @@ export default function TotalEarningsReport({ currentOfficeId, currentUserId, of
                 referenceMonth,
                 referenceYear,
                 currentOfficeId,
-                currentUserId
+                currentUserId,
+                user?.token || ""
             );
             setReportData(response.data);
         } catch (err: any) {
@@ -143,7 +155,7 @@ export default function TotalEarningsReport({ currentOfficeId, currentUserId, of
     if (!reportData || nivoChartData.length === 0) return <div className="text-center p-8 text-gray-600">No hay datos de ganancias para el período seleccionado.</div>;
 
     return (
-       
+
         <div className="max-w-sm p-4 md:p-6 rounded-md border border-gray-200 bg-white shadow-lg">
             <h1 className="text-xl md:text-2xl font-bold  text-gray-800 text-center">
                 {officeName || "Reporte de Ganancias"} {/* Título por defecto si officeName no está */}
@@ -177,7 +189,7 @@ export default function TotalEarningsReport({ currentOfficeId, currentUserId, of
                 </div>
             </div>
 
-          
+
             <div className="bg-white rounded-lg shadow-sm h-[280px]  w-full flex flex-col">
                 <h2 className="text-lg md:text-xl font-semibold text-gray-700 text-center">
                     Ganancias Totales por Mes

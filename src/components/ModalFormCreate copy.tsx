@@ -294,263 +294,260 @@ export default function ModalFormCreate({ isOpen, onClose, refetch }: ModalFormC
               <Dialog.Title className="text-2xl font-bold text-gray-900">
                 Crear nueva afiliación
               </Dialog.Title>
-              <div className="overflow-y-auto max-h-[32rem] md:max-h-[30rem]">
-                <form onSubmit={handleSubmit} className="mt-4 grid grid-cols-2 gap-4 text-sm">
-                  {/* Seleccionar Empresa */}
+
+              <form onSubmit={handleSubmit} className="mt-4 grid grid-cols-2 gap-4">
+                {/* Seleccionar Empresa */}
+                <div>
+                  <label htmlFor="companyName" className="block text-gray-700 text-sm font-bold mb-1">
+                    Empresa:
+                  </label>
+                  <select
+                    id="companyName"
+                    name="companyName"
+                    value={formData.companyName || ""} // Usar el nombre para el select
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    required
+                  >
+                    <option value="">Seleccionar Empresa</option>
+                    {lists?.companies.map((companyItem) => (
+                      <option key={companyItem.id} value={companyItem.name}>
+                        {companyItem.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {/* Nombre completo */}
+                <div>
+                  <label htmlFor="fullName" className="block text-gray-700 text-sm font-bold mb-1">
+                    Nombre Completo:
+                  </label>
+                  <input
+                    type="text"
+                    id="fullName"
+                    name="fullName"
+                    value={formData.fullName}
+                    onChange={handleChange}
+                    placeholder="Ej: Juan Pérez"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    required
+                  />
+                </div>
+
+                {/* Identificación */}
+                <div>
+                  <label htmlFor="identification" className="block text-gray-700 text-sm font-bold mb-1">
+                    Identificación:
+                  </label>
+                  <input
+                    type="text"
+                    id="identification"
+                    name="identification"
+                    value={formData.identification}
+                    onChange={handleChange}
+                    placeholder="Ej: 123456789"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    required
+                  />
+                </div>
+
+                {/* Teléfono del afiliado */}
+                <div>
+                  <label htmlFor="phone" className="block text-gray-700 text-sm font-bold mb-1">
+                    Teléfono del Afiliado:
+                  </label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phones[0]" // Usar 'phones[0]' para el primer elemento del array
+                    value={formData.phones[0] || ''}
+                    onChange={handleChange}
+                    placeholder="Ej: 3001234567"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+                <div className="grid grid-cols-2 col-span-2 gap-4">
+
+                  {/* Talonario / No. Factura */}
+
                   <div>
-                    <label htmlFor="companyName" className="block text-gray-700 text-sm font-bold mb-1">
-                      Empresa:
-                    </label>
-                    <select
-                      id="companyName"
-                      name="companyName"
-                      value={formData.companyName || ""} // Usar el nombre para el select
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                      required
-                    >
-                      <option value="">Seleccionar Empresa</option>
-                      {lists?.companies.map((companyItem) => (
-                        <option key={companyItem.id} value={companyItem.name}>
-                          {companyItem.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  {/* Nombre completo */}
-                  <div>
-                    <label htmlFor="fullName" className="block text-gray-700 text-sm font-bold mb-1">
-                      Nombre Completo:
+                    <label htmlFor="talonNumber" className="block text-gray-700 text-sm font-bold mb-1">
+                      No. Factura:
                     </label>
                     <input
                       type="text"
-                      id="fullName"
-                      name="fullName"
-                      value={formData.fullName}
+                      id="talonNumber"
+                      name="talonNumber"
+                      value={formData.talonNumber || ''}
                       onChange={handleChange}
-                      placeholder="Ej: Juan Pérez"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                      required
-                    />
-                  </div>
-
-                  {/* Identificación */}
-                  <div>
-                    <label htmlFor="identification" className="block text-gray-700 text-sm font-bold mb-1">
-                      Identificación:
-                    </label>
-                    <input
-                      type="text"
-                      id="identification"
-                      name="identification"
-                      value={formData.identification}
-                      onChange={handleChange}
-                      placeholder="Ej: 123456789"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                      required
-                    />
-                  </div>
-
-                  {/* Teléfono del afiliado */}
-                  <div>
-                    <label htmlFor="phone" className="block text-gray-700 text-sm font-bold mb-1">
-                      Teléfono del Afiliado:
-                    </label>
-                    <input
-                      type="tel"
-                      id="phone"
-                      name="phones[0]" // Usar 'phones[0]' para el primer elemento del array
-                      value={formData.phones[0] || ''}
-                      onChange={handleChange}
-                      placeholder="Ej: 3001234567"
+                      placeholder="Ej: TALON-001"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     />
                   </div>
-                  {user?.role !== 'admin' ? <div className="grid grid-cols-2 col-span-2 gap-4">
 
-                    {/* Talonario / No. Factura */}
-
-                    <div>
-                      <label htmlFor="talonNumber" className="block text-gray-700 text-sm font-bold mb-1">
-                        No. Factura:
-                      </label>
-                      <input
-                        type="text"
-                        id="talonNumber"
-                        name="talonNumber"
-                        value={formData.talonNumber || ''}
-                        onChange={handleChange}
-                        placeholder="Ej: 001"
-                        required
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                      />
-                    </div>
-
-                    {/* Seleccionar Metodo de Pago */}
-                    <div>
-                      <label htmlFor="paymentMethodName" className="block text-gray-700 text-sm font-bold mb-1">
-                        Método de Pago:
-                      </label>
-                      <select
-                        id="paymentMethodName"
-                        name="paymentMethodName"
-                        value={formData.paymentMethodName || ""}
-                        onChange={handleChange}
-                        required
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                      >
-                        <option value="">Seleccionar Método</option>
-                        {lists?.paymentMethods.map((method) => (
-                          <option key={method.id} value={method.name}>
-                            {method.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div> : <></>}
-
-
-
-
-                  {/* Valor de afiliación */}
+                  {/* Seleccionar Metodo de Pago */}
                   <div>
-                    <label htmlFor="value" className="block text-gray-700 text-sm font-bold mb-1">
-                      Valor de Afiliación:
-                    </label>
-                    <input
-                      type="number"
-                      id="value"
-                      name="value"
-                      value={formData.value === 0 ? '' : formData.value} // Mostrar vacío si es 0
-                      onChange={handleChange}
-                      placeholder="Ej: 150000"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                      required
-                    />
-                  </div>
-
-                  {/* Seleccionar EPS */}
-                  <div>
-                    <label htmlFor="eps" className="block text-gray-700 text-sm font-bold mb-1">
-                      EPS:
+                    <label htmlFor="paymentMethodName" className="block text-gray-700 text-sm font-bold mb-1">
+                      Método de Pago:
                     </label>
                     <select
-                      id="eps"
-                      name="eps"
-                      value={formData.eps || ""} // Usar el nombre
+                      id="paymentMethodName"
+                      name="paymentMethodName"
+                      value={formData.paymentMethodName || ""}
                       onChange={handleChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     >
-                      <option value="">Seleccionar EPS</option>
-                      {lists?.eps.map((epsItem) => (
-                        <option key={epsItem.id} value={epsItem.name}>
-                          {epsItem.name}
+                      <option value="">Seleccionar Método</option>
+                      {lists?.paymentMethods.map((method) => (
+                        <option key={method.id} value={method.name}>
+                          {method.name}
                         </option>
                       ))}
                     </select>
                   </div>
+                </div>
 
-                  {/* Seleccionar ARL (Opcional) */}
-                  <div>
-                    <label htmlFor="arl" className="block text-gray-700 text-sm font-bold mb-1">
-                      ARL (Opcional):
-                    </label>
-                    <select
-                      id="arl"
-                      name="arl"
-                      value={formData.arl || ""} // Usar el nombre
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    >
-                      <option value="">Seleccionar ARL (Opcional)</option>
-                      {lists?.arl.map((arlItem) => (
-                        <option key={arlItem.id} value={arlItem.name}>
-                          {arlItem.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
 
-                  {/* Seleccionar Nivel de Riesgo */}
-                  <div>
-                    <label htmlFor="risk" className="block text-gray-700 text-sm font-bold mb-1">
-                      Nivel de Riesgo:
-                    </label>
-                    <select
-                      id="risk"
-                      name="risk"
-                      value={formData.risk || ""} // Mantener como string
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    >
-                      <option value="">Seleccionar Nivel de Riesgo</option>
-                      <option value="Nivel I">Nivel 1</option>
-                      <option value="Nivel II">Nivel 2</option>
-                      <option value="Nivel III">Nivel 3</option>
-                      <option value="Nivel IV">Nivel 4</option>
-                      <option value="Nivel V">Nivel 5</option>
-                    </select>
-                  </div>
 
-                  {/* Seleccionar CCF (Opcional) */}
-                  <div>
-                    <label htmlFor="ccf" className="block text-gray-700 text-sm font-bold mb-1">
-                      CCF (Opcional):
-                    </label>
-                    <select
-                      id="ccf"
-                      name="ccf"
-                      value={formData.ccf || ""} // Usar el nombre
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    >
-                      <option value="">Seleccionar CCF (Opcional)</option>
-                      {lists?.ccf.map((ccfItem) => (
-                        <option key={ccfItem.id} value={ccfItem.name}>
-                          {ccfItem.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                {/* Valor de afiliación */}
+                <div>
+                  <label htmlFor="value" className="block text-gray-700 text-sm font-bold mb-1">
+                    Valor de Afiliación:
+                  </label>
+                  <input
+                    type="number"
+                    id="value"
+                    name="value"
+                    value={formData.value === 0 ? '' : formData.value} // Mostrar vacío si es 0
+                    onChange={handleChange}
+                    placeholder="Ej: 150000"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    required
+                  />
+                </div>
 
-                  {/* Seleccionar Fondo de Pensión (Opcional) */}
-                  <div>
-                    <label htmlFor="pensionFund" className="block text-gray-700 text-sm font-bold mb-1">
-                      Fondo de Pensión (Opcional):
-                    </label>
-                    <select
-                      id="pensionFund"
-                      name="pensionFund"
-                      value={formData.pensionFund || ""} // Usar el nombre
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    >
-                      <option value="">Seleccionar Fondo de Pensión (Opcional)</option>
-                      {lists?.pensionFunds.map((pfItem) => (
-                        <option key={pfItem.id} value={pfItem.name}>
-                          {pfItem.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                {/* Seleccionar EPS */}
+                <div>
+                  <label htmlFor="eps" className="block text-gray-700 text-sm font-bold mb-1">
+                    EPS:
+                  </label>
+                  <select
+                    id="eps"
+                    name="eps"
+                    value={formData.eps || ""} // Usar el nombre
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  >
+                    <option value="">Seleccionar EPS</option>
+                    {lists?.eps.map((epsItem) => (
+                      <option key={epsItem.id} value={epsItem.name}>
+                        {epsItem.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                  {/* Observaciones */}
-                  <div className="col-span-2">
-                    <label htmlFor="observation" className="block text-gray-700 text-sm font-bold mb-1">
-                      Observaciones:
-                    </label>
-                    <textarea
-                      id="observation"
-                      name="observation"
-                      value={formData.observation || ""}
-                      onChange={handleChange}
-                      placeholder="Añade cualquier observación relevante aquí..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    />
-                  </div>
+                {/* Seleccionar ARL (Opcional) */}
+                <div>
+                  <label htmlFor="arl" className="block text-gray-700 text-sm font-bold mb-1">
+                    ARL (Opcional):
+                  </label>
+                  <select
+                    id="arl"
+                    name="arl"
+                    value={formData.arl || ""} // Usar el nombre
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  >
+                    <option value="">Seleccionar ARL (Opcional)</option>
+                    {lists?.arl.map((arlItem) => (
+                      <option key={arlItem.id} value={arlItem.name}>
+                        {arlItem.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                  {/* Estado de Pago Inicial */}
-                  {/* <div>
+                {/* Seleccionar Nivel de Riesgo */}
+                <div>
+                  <label htmlFor="risk" className="block text-gray-700 text-sm font-bold mb-1">
+                    Nivel de Riesgo:
+                  </label>
+                  <select
+                    id="risk"
+                    name="risk"
+                    value={formData.risk || ""} // Mantener como string
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  >
+                    <option value="">Seleccionar Nivel de Riesgo</option>
+                    <option value="Nivel I">Nivel 1</option>
+                    <option value="Nivel II">Nivel 2</option>
+                    <option value="Nivel III">Nivel 3</option>
+                    <option value="Nivel IV">Nivel 4</option>
+                    <option value="Nivel V">Nivel 5</option>
+                  </select>
+                </div>
+
+                {/* Seleccionar CCF (Opcional) */}
+                <div>
+                  <label htmlFor="ccf" className="block text-gray-700 text-sm font-bold mb-1">
+                    CCF (Opcional):
+                  </label>
+                  <select
+                    id="ccf"
+                    name="ccf"
+                    value={formData.ccf || ""} // Usar el nombre
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  >
+                    <option value="">Seleccionar CCF (Opcional)</option>
+                    {lists?.ccf.map((ccfItem) => (
+                      <option key={ccfItem.id} value={ccfItem.name}>
+                        {ccfItem.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Seleccionar Fondo de Pensión (Opcional) */}
+                <div>
+                  <label htmlFor="pensionFund" className="block text-gray-700 text-sm font-bold mb-1">
+                    Fondo de Pensión (Opcional):
+                  </label>
+                  <select
+                    id="pensionFund"
+                    name="pensionFund"
+                    value={formData.pensionFund || ""} // Usar el nombre
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  >
+                    <option value="">Seleccionar Fondo de Pensión (Opcional)</option>
+                    {lists?.pensionFunds.map((pfItem) => (
+                      <option key={pfItem.id} value={pfItem.name}>
+                        {pfItem.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Observaciones */}
+                <div className="col-span-2">
+                  <label htmlFor="observation" className="block text-gray-700 text-sm font-bold mb-1">
+                    Observaciones:
+                  </label>
+                  <textarea
+                    id="observation"
+                    name="observation"
+                    value={formData.observation || ""}
+                    onChange={handleChange}
+                    placeholder="Añade cualquier observación relevante aquí..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+
+                {/* Estado de Pago Inicial */}
+                {/* <div>
                                     <label htmlFor="paid" className="block text-gray-700 text-sm font-bold mb-1">
                                         Estado de Pago:
                                     </label>
@@ -568,8 +565,8 @@ export default function ModalFormCreate({ isOpen, onClose, refetch }: ModalFormC
                                     </select>
                                 </div> */}
 
-                  {/* Fecha de Pago Recibido (opcional, solo si el estado es Pagado) */}
-                  {/* <div>
+                {/* Fecha de Pago Recibido (opcional, solo si el estado es Pagado) */}
+                {/* <div>
                                     <label htmlFor="datePaidReceived" className="block text-gray-700 text-sm font-bold mb-1">
                                         Fecha de Pago Recibido (Opcional):
                                     </label>
@@ -583,8 +580,8 @@ export default function ModalFormCreate({ isOpen, onClose, refetch }: ModalFormC
                                     />
                                 </div> */}
 
-                  {/* Fecha de Registro Gubernamental Completo (govRegistryCompletedAt) */}
-                  {/* <div>
+                {/* Fecha de Registro Gubernamental Completo (govRegistryCompletedAt) */}
+                {/* <div>
                                     <label htmlFor="govRegistryCompletedAt" className="block text-gray-700 text-sm font-bold mb-1">
                                         Fecha Registro Gubernamental (Opcional):
                                     </label>
@@ -598,25 +595,24 @@ export default function ModalFormCreate({ isOpen, onClose, refetch }: ModalFormC
                                     />
                                 </div> */}
 
-                  {/* Botones de acción */}
-                  <div className="col-span-2 flex justify-end gap-3 mt-4">
-                    <button
-                      type="button"
-                      onClick={onClose}
-                      className="px-4 py-2 bg-red-600 text-white font-medium rounded-lg shadow-md hover:bg-red-700 focus:ring-2 focus:ring-red-400 transition duration-300"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="px-4 py-2 bg-green-600 text-white font-medium rounded-lg shadow-md hover:bg-green-700 focus:ring-2 focus:ring-green-400 transition duration-300"
-                    >
-                      Guardar
-                    </button>
-                  </div>
-                </form>
-              </div>
+                {/* Botones de acción */}
+                <div className="col-span-2 flex justify-end gap-3 mt-4">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="px-4 py-2 bg-red-600 text-white font-medium rounded-lg shadow-md hover:bg-red-700 focus:ring-2 focus:ring-red-400 transition duration-300"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-4 py-2 bg-green-600 text-white font-medium rounded-lg shadow-md hover:bg-green-700 focus:ring-2 focus:ring-green-400 transition duration-300"
+                  >
+                    Guardar
+                  </button>
+                </div>
+              </form>
             </Dialog.Panel>
           </Transition.Child>
         </div>

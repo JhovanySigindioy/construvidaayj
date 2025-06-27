@@ -1,32 +1,16 @@
 import { useState } from 'react';
 import { FaUser, FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-
 import { urlBase } from '../../globalConfig/config';
 import { useAuth } from '../../context/AuthContext';
-// Asegúrate de importar el hook useAuth
+import LoadingButton from '../LoadingButton';
 
-// Componente de carga
-function Loading({ label = "Cargando..." }: { label?: string }) {
-  return (
-    <button
-      type="button"
-      className="w-full py-2 rounded-full bg-indigo-400 text-white font-semibold shadow-md hover:cursor-not-allowed duration-300"
-      disabled
-    >
-      <div className="flex items-center justify-center">
-        <div className="h-5 w-5 border-t-transparent border-solid animate-spin rounded-full border-white border-4"></div>
-        <span className="ml-2">{label}</span>
-      </div>
-    </button>
-  );
-}
 
 export default function LoginForm() {
   const { login } = useAuth();  // Usamos el hook useAuth para acceder al login
   const navigate = useNavigate();
 
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -41,7 +25,7 @@ export default function LoginForm() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ email, password }),
       });
 
       if (!res.ok) {
@@ -80,8 +64,8 @@ export default function LoginForm() {
           <input
             type="text"
             placeholder="Usuario"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className="w-full pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-400"
             disabled={loading}
           />
@@ -100,7 +84,7 @@ export default function LoginForm() {
         {error && <p className="text-red-500 text-sm">{error}</p>}
 
         {loading
-          ? <Loading label="Iniciando sesión..." />
+          ? <LoadingButton label="Iniciando sesión..." />
           : (
             <button
               onClick={handleLogin}

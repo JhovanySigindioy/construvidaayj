@@ -4,6 +4,7 @@ import Swal from 'sweetalert2';
 import { Office } from '../types/office';
 import { useAuth } from '../context/AuthContext'; // Asegúrate de que esta ruta sea correcta
 import { urlBase } from '../globalConfig/config';
+import { User } from 'lucide-react';
 
 export default function OfficeSelectPage() {
     const [offices, setOffices] = useState<Office[]>([]);
@@ -11,7 +12,7 @@ export default function OfficeSelectPage() {
     const navigate = useNavigate();
     // Obtén tanto `user` como `setSelectedOfficeId` del contexto
     const { user, setSelectedOfficeId } = useAuth(); // <--- CAMBIO CLAVE AQUÍ
-
+    console.log('FINAL SELECT: ', JSON.stringify(user, null, 2));
     useEffect(() => {
         if (!user || !user.offices || user.offices.length === 0) {
             setError('No tienes oficinas asociadas.');
@@ -21,6 +22,11 @@ export default function OfficeSelectPage() {
     }, [user]);
 
     const handleSelectOffice = async (officeId: number) => {
+        console.log(`
+            user: ${user}
+            userid: ${user?.id}
+            usertoken: ${user?.token}
+            `);
         if (!user || !user.id || !user.token) {
             Swal.fire('Error', 'No se encontró información del usuario.', 'error');
             return;
@@ -48,7 +54,7 @@ export default function OfficeSelectPage() {
         });
 
         try {
-            const response = await fetch(`${urlBase}/monthly_affiliations`, {
+            const response = await fetch(`${urlBase}/monthly-affiliations-copy`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${user.token}`,
