@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { DataClient } from '../types/dataClient'; // Asegúrate de que esta ruta sea correcta para tu interfaz DataClient
 import { urlBase } from '../globalConfig/config'; // Asegúrate de que esta ruta sea correcta para tu URL base
+import { useAuth } from '../context/AuthContext';
 
 type Params = {
     month: number;
@@ -15,6 +16,7 @@ interface StoredUser {
 }
 
 export function useClientsData({ month, year }: Params) {
+    const { user } =  useAuth();
     const [data, setData] = useState<DataClient[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);

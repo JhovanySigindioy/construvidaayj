@@ -21,7 +21,8 @@ export interface UnsubscribedAffiliationData {
     observation: string | null; // Observación de la afiliación original
     paid: PaymentStatus; // Estado de pago de la afiliación original (Ahora usa PaymentStatus)
     paymentMethodName: string | null; // Nombre del método de pago (Añadido para consistencia con CustomerManagementPage)
-    talonNumber: string;
+    talonNumber: string | null; // Hago que sea nullable ya que a veces puede no existir
+
     // === Campos de Desafiliación / Historial ===
     deletedAt: string | null; // Fecha en que la afiliación fue marcada como inactiva (YYYY-MM-DD)
     deletedByUserName: string | null; // Nombre del usuario que la desactivó
@@ -32,4 +33,10 @@ export interface UnsubscribedAffiliationData {
     unsubscriptionReason: string | null; // Razón de la desafiliación del registro clients_unsubscriptions
     unsubscriptionCost: number | null; // Costo asociado a la desafiliación del registro clients_unsubscriptions
     unsubscriptionObservation: string | null; // Observación específica del registro clients_unsubscriptions
+
+    // === Campos de Factura Asociada (ADICIÓN) ===
+    facturaId: number | null; // ID de la factura asociada (si existe)
+    facturaNumero: string | null; // Número de la factura (si existe)
+    facturaInvoiceStatus: string | null; // Estado de la factura (si existe)
+    facturaPdfPath: string | null; // Ruta al PDF de la factura (si existe)
 }

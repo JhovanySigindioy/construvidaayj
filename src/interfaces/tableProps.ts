@@ -2,7 +2,7 @@ export interface TableProps<T extends Record<string, any>> { // Ya habíamos cam
     headers: (keyof T)[];
     headerLabels?: Partial<Record<keyof T, string>>;
     data: T[];
-    // === CORRECCIÓN AQUÍ: Usar un tipo mapeado para mayor precisión ===
+    idKey?: string;
     cellRenderers?: {
         [K in keyof T]?: (value: T[K], row: T) => React.ReactNode;
     };

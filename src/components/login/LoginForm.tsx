@@ -4,10 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { urlBase } from '../../globalConfig/config';
 import { useAuth } from '../../context/AuthContext';
 import LoadingButton from '../LoadingButton';
-
+import React from 'react'; // Importar React para el tipado de eventos
 
 export default function LoginForm() {
-  const { login } = useAuth();  // Usamos el hook useAuth para acceder al login
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
@@ -33,12 +33,20 @@ export default function LoginForm() {
       }
 
       const data = await res.json();
-      login(data);  // Usamos la función login del contexto para almacenar el usuario
+      login(data);
       navigate('/office_select');
     } catch (err: any) {
       setError(err.message || 'Error al iniciar sesión');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Función para manejar el envío del formulario al presionar Enter
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault(); // Prevenir el comportamiento por defecto del formulario (recargar la página)
+    if (!loading) { // Solo ejecutar si no está cargando ya
+      handleLogin();
     }
   };
 
@@ -58,7 +66,7 @@ export default function LoginForm() {
         Inicie sesión para recibir actualizaciones sobre las cosas que le interesan.
       </p>
 
-      <div className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div className="relative">
           <FaUser className="absolute top-3 left-3 text-gray-400" />
           <input
@@ -68,6 +76,7 @@ export default function LoginForm() {
             onChange={(e) => setEmail(e.target.value)}
             className="w-full pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-400"
             disabled={loading}
+        
           />
         </div>
         <div className="relative">
@@ -79,6 +88,7 @@ export default function LoginForm() {
             onChange={(e) => setPassword(e.target.value)}
             className="w-full pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-400"
             disabled={loading}
+      
           />
         </div>
         {error && <p className="text-red-500 text-sm">{error}</p>}
@@ -87,13 +97,13 @@ export default function LoginForm() {
           ? <LoadingButton label="Iniciando sesión..." />
           : (
             <button
-              onClick={handleLogin}
+              type="submit" 
               className="w-full py-2 rounded-full bg-gradient-to-r from-emerald-400 to-sky-400 text-white font-semibold shadow-md hover:from-emerald-500 hover:to-sky-500 transition"
             >
               Iniciar Sesión
             </button>
           )}
-      </div>
+      </form>
     </div>
   );
 }

@@ -4,15 +4,13 @@ import Swal from 'sweetalert2';
 import { Office } from '../types/office';
 import { useAuth } from '../context/AuthContext'; // Asegúrate de que esta ruta sea correcta
 import { urlBase } from '../globalConfig/config';
-import { User } from 'lucide-react';
+
 
 export default function OfficeSelectPage() {
     const [offices, setOffices] = useState<Office[]>([]);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
-    // Obtén tanto `user` como `setSelectedOfficeId` del contexto
-    const { user, setSelectedOfficeId } = useAuth(); // <--- CAMBIO CLAVE AQUÍ
-    console.log('FINAL SELECT: ', JSON.stringify(user, null, 2));
+    const { user, setSelectedOfficeId } = useAuth(); 
     useEffect(() => {
         if (!user || !user.offices || user.offices.length === 0) {
             setError('No tienes oficinas asociadas.');
@@ -22,26 +20,12 @@ export default function OfficeSelectPage() {
     }, [user]);
 
     const handleSelectOffice = async (officeId: number) => {
-        console.log(`
-            user: ${user}
-            userid: ${user?.id}
-            usertoken: ${user?.token}
-            `);
         if (!user || !user.id || !user.token) {
             Swal.fire('Error', 'No se encontró información del usuario.', 'error');
             return;
         }
 
-        // *** PASO CLAVE: Actualiza el estado global de la oficina en el AuthContext ***
-        // Esto hará que todos los componentes que escuchan a `selectedOfficeId` (como el Navbar)
-        // se re-rendericen automáticamente. La función del contexto también guarda en localStorage.
-        setSelectedOfficeId(officeId); // <--- AÑADE ESTA LÍNEA
-
-        // Ya no necesitas esta línea, ya que `setSelectedOfficeId` en el contexto se encarga de guardar en localStorage.
-        // localStorage.setItem('selectedOffice', officeId.toString()); 
-        // Si officeId debe guardarse como un objeto, asegúrate de que la función en AuthContext maneje eso:
-        // Por ejemplo: setSelectedOfficeId({ id: officeId, name: "Nombre de la oficina" });
-        // Pero basándome en tu useAuth, solo espera el ID.
+        setSelectedOfficeId(officeId);
 
         Swal.fire({
             title: 'Cargando...',
@@ -66,11 +50,11 @@ export default function OfficeSelectPage() {
             const data = await response.json();
 
             if (response.ok) {
-                // Agregar un delay de 1 segundo antes de cerrar y navegar
+                
                 setTimeout(() => {
                     Swal.close();
                     navigate(`/customer_management`);
-                }, 800);
+                }, 200);
             } else {
                 Swal.close();
                 Swal.fire('Error', data.message || 'Ocurrió un error al verificar la afiliación.', 'error');

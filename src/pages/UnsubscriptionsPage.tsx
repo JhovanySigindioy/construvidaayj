@@ -5,7 +5,7 @@ import Table from '../components/Table';
 import Pagination from '../components/Pagination';
 import ColumnSelector from '../components/ColumnSelector';
 import GlobalFilter from '../components/GlobalFilter';
-import { FiEdit } from 'react-icons/fi';
+import { FiEdit, FiFileText } from 'react-icons/fi'; // Importar FiFileText para el icono de factura
 
 import { UnsubscribedAffiliationData, PaymentStatus } from '../types/UnsubscribedAffiliationData';
 import Loading from "../components/Loading";
@@ -13,6 +13,7 @@ import { useAuth } from "../context/AuthContext";
 
 import { useUnsubscribedAffiliationsData } from '../customHooks/useUnsubscribedAffiliationsData';
 import ModalEditUnsubscription from '../components/ModalEditUnsubscription';
+import { urlBase } from "../globalConfig/config"; // Asegúrate de importar urlBase
 
 // === Helpers ===
 // Define ALL possible headers, excluding 'actions' which will be handled by rowActions.
@@ -40,8 +41,10 @@ const allPossibleHeadersUnsubscribed: (keyof UnsubscribedAffiliationData)[] = [
     'paid',
     'datePaidReceived',
     'govRegistryCompletedAt',
-    'talonNumber',         // Columna potencial a ocultar para admin
-    'paymentMethodName',   // Columna potencial a ocultar para admin
+    'talonNumber',
+    'paymentMethodName',
+    'facturaNumero', // Añadida para que aparezca en la tabla
+    'facturaInvoiceStatus', // Añadida para que aparezca en la tabla
 ];
 
 // Etiquetas para las cabeceras de la tabla, cubriendo todas las propiedades.
@@ -71,8 +74,12 @@ const headerLabels: Record<keyof UnsubscribedAffiliationData, string> = {
     unsubscriptionObservation: 'Obs. Retiro',
     deletedAt: 'Fecha Inactivación DB',
     deletedByUserName: 'Inactivado Por',
-    talonNumber: 'No. Factura',
+    talonNumber: 'No. Recibo/Talón (Original)', // Cambiado a Recibo/Talón para claridad
     paymentMethodName: 'Método Pago (Original)',
+    facturaId: 'ID Factura', // Etiqueta para el nuevo campo
+    facturaNumero: 'No. Factura', // Etiqueta para el nuevo campo
+    facturaInvoiceStatus: 'Estado Factura', // Etiqueta para el nuevo campo
+    facturaPdfPath: 'Ruta PDF Factura', // Etiqueta para el nuevo campo
 };
 
 export default function UnsubscriptionsPage() {
@@ -94,13 +101,9 @@ export default function UnsubscriptionsPage() {
 
     // Determine initial headers based on user role
     const initialDefaultHeadersUnsubscribed = useMemo(() => {
-        // Asumiendo que `user?.role === 'admin'` es la forma correcta de identificar un administrador.
-        // Si el usuario es 'admin', filtra 'talonNumber' y 'paymentMethodName'.
-        if (user?.role === 'admin') {
-            return allPossibleHeadersUnsubscribed.filter(
-                (header) => header !== 'talonNumber' && header !== 'paymentMethodName'
-            );
-        }
+        // Por defecto, mostrar todas las columnas. Si quieres ocultar para roles no-admin,
+        // la lógica iría aquí (ej: user?.role !== 'admin' ? filterHeaders : allHeaders).
+        // Para este caso, un admin debería ver todo.
         return allPossibleHeadersUnsubscribed;
     }, [user]); // Recalcula si el objeto de usuario cambia (ej. después de iniciar sesión o actualizar el rol)
 
@@ -132,18 +135,12 @@ export default function UnsubscriptionsPage() {
     const columnOptions = useMemo(() => {
         let availableHeadersForSelection = allPossibleHeadersUnsubscribed;
 
-        if (user?.role === 'admin') {
-            availableHeadersForSelection = allPossibleHeadersUnsubscribed.filter(
-                (header) => header !== 'talonNumber' && header !== 'paymentMethodName'
-            );
-        }
-
-        // Añadir opciones de ID por separado, ya que no se muestran por defecto en la tabla pero pueden ser filtrables.
         const idOptions = [
             { key: 'clientId', label: headerLabels.clientId },
             { key: 'affiliationId', label: headerLabels.affiliationId },
             { key: 'companyId', label: headerLabels.companyId },
             { key: 'unsubscriptionRecordId', label: headerLabels.unsubscriptionRecordId },
+            { key: 'facturaId', label: headerLabels.facturaId }, // Añadido para selección
         ];
 
         // Construye todas las opciones, filtrando duplicados.
@@ -154,7 +151,7 @@ export default function UnsubscriptionsPage() {
         return allOptions.filter((item, index, self) =>
             index === self.findIndex((t) => t.key === item.key)
         ); // Filtra duplicados
-    }, [user]);
+    }, [user]); // Dependencia de user para recalcular si el rol cambia
 
     const filteredData = useMemo(() => {
         const lowerFilter = filterText.toLowerCase();
@@ -248,6 +245,44 @@ export default function UnsubscriptionsPage() {
         );
     }, []);
 
+    // Helper para renderizar el estado de la factura
+    const renderInvoiceStatusBadge = (status: string | null | undefined) => {
+        if (!status) return <span className="text-gray-500">N/A</span>;
+
+        let colorClass = '';
+        switch (status.toLowerCase()) {
+            case 'emitida':
+                colorClass = 'bg-blue-100 text-blue-600';
+                break;
+            case 'anulada':
+                colorClass = 'bg-red-100 text-red-600';
+                break;
+            case 'reemplazada':
+                colorClass = 'bg-yellow-100 text-yellow-700';
+                break;
+            default:
+                colorClass = 'bg-gray-100 text-gray-600';
+                break;
+        }
+
+        return (
+            <span className={`rounded-full px-2 py-1 text-sm font-semibold min-w-[100px] text-center ${colorClass}`}>
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+            </span>
+        );
+    };
+
+    // --- ADICIÓN: Función para manejar la visualización/descarga de facturas ---
+    const handleViewFactura = useCallback((item: UnsubscribedAffiliationData) => {
+        if (item.facturaId) { // Asegurarse de que exista un facturaId
+            const downloadUrl = `${urlBase}/facturas/${item.facturaId}/download`;
+            window.open(downloadUrl, '_blank'); // Abre el PDF en una nueva pestaña
+        } else {
+            Swal.fire('Información', 'No se encontró una factura asociada a esta afiliación desafiliada.', 'info');
+        }
+    }, []);
+
+
     return (
         <>
             <div className="w-full max-w-screen-2xl mx-auto px-1 py-6 lg:px-12 fade-in">
@@ -295,6 +330,7 @@ export default function UnsubscriptionsPage() {
                             <Table<UnsubscribedAffiliationData>
                                 headers={visibleHeaders}
                                 data={paginatedData}
+                                idKey="affiliationId"
                                 headerLabels={headerLabels}
                                 cellRenderers={{
                                     phones: (value: string | number | string[] | [] | undefined) => {
@@ -353,6 +389,8 @@ export default function UnsubscriptionsPage() {
                                             </span>
                                         );
                                     },
+                                    facturaNumero: (val) => (val ? <span className="font-medium text-gray-800">{val}</span> : <span className="text-gray-500">N/A</span>),
+                                    facturaInvoiceStatus: (val) => renderInvoiceStatusBadge(val as string | null),
                                 }}
                                 rowActions={(item) => ( // Re-introducido rowActions
                                     <div className="flex gap-2 justify-center items-center">
@@ -363,6 +401,23 @@ export default function UnsubscriptionsPage() {
                                         >
                                             <FiEdit size={20} />
                                         </button>
+                                        {/* Botón para ver/descargar factura */}
+                                        {item.facturaId ? (
+                                            <button
+                                                onClick={() => handleViewFactura(item)}
+                                                className="p-2 text-purple-600 hover:bg-purple-100 rounded-full transition duration-150"
+                                                title="Ver Factura Asociada"
+                                            >
+                                                <FiFileText size={18} />
+                                            </button>
+                                        ) : (
+                                            <span
+                                                className="p-2 text-gray-400 cursor-not-allowed"
+                                                title="No hay factura asociada"
+                                            >
+                                                <FiFileText size={18} />
+                                            </span>
+                                        )}
                                     </div>
                                 )}
                             />

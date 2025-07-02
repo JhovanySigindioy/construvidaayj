@@ -23,8 +23,12 @@ type FormData = {
   paid: "Pendiente" | "Pagado" | "En Proceso";
   datePaidReceived: string | null;
   govRegistryCompletedAt: string | null;
-  talonNumber: string | null;
+  // talonNumber: string | null; // ELIMINADO: Ya no se usa como campo editable aquí
   paymentMethodId: number | null;
+  facturaId: number | null; // ADICIÓN: Para compatibilidad de tipos con DataClient
+  facturaNumero: string | null; // ADICIÓN: Para compatibilidad de tipos con DataClient
+  facturaInvoiceStatus: string | null; // ADICIÓN: Para compatibilidad de tipos con DataClient
+  facturaPdfPath: string | null; // ADICIÓN: Para compatibilidad de tipos con DataClient
 };
 
 interface FormModalProps {
@@ -56,8 +60,12 @@ export default function ModalForm({ isOpen, onClose, client, refetch }: FormModa
     paid: "Pendiente",
     datePaidReceived: null,
     govRegistryCompletedAt: null,
-    talonNumber: null,
+    // talonNumber: null, // ELIMINADO
     paymentMethodId: null,
+    facturaId: null, // Inicializado
+    facturaNumero: null, // Inicializado
+    facturaInvoiceStatus: null, // Inicializado
+    facturaPdfPath: null, // Inicializado
   };
 
   const [formData, setFormData] = useState<FormData>(initialFormData);
@@ -103,8 +111,12 @@ export default function ModalForm({ isOpen, onClose, client, refetch }: FormModa
         paid: client.paid,
         datePaidReceived: formatDateForInput(client.datePaidReceived),
         govRegistryCompletedAt: formatDateForInput(client.govRegistryCompletedAt),
-        talonNumber: client.talonNumber || null,
+        // talonNumber: client.talonNumber || null, // ELIMINADO
         paymentMethodId: paymentMethodId,
+        facturaId: client.facturaId || null, // Mapeo del nuevo campo
+        facturaNumero: client.facturaNumero || null, // Mapeo del nuevo campo
+        facturaInvoiceStatus: client.facturaInvoiceStatus || null, // Mapeo del nuevo campo
+        facturaPdfPath: client.facturaPdfPath || null, // Mapeo del nuevo campo
       });
     } else if (!client) {
       setFormData(initialFormData);
@@ -191,7 +203,7 @@ export default function ModalForm({ isOpen, onClose, client, refetch }: FormModa
         paid_status: formData.paid,
         date_paid_received: formData.datePaidReceived,
         gov_record_completed_at: formData.govRegistryCompletedAt,
-        talon_number: formData.talonNumber,
+        // talon_number: formData.talonNumber, // ELIMINADO del payload
         payment_method_id: formData.paymentMethodId,
       };
       console.log("DATOS ENVIADOS PARA ACTUALIZAR:::", JSON.stringify(payload, null, 2));
@@ -287,7 +299,7 @@ export default function ModalForm({ isOpen, onClose, client, refetch }: FormModa
               </Dialog.Title>
               <div className="overflow-y-auto max-h-[32rem] md:max-h-[30rem]">
 
-                <form onSubmit={handleSubmit} className="mt-4 grid grid-cols-2 gap-2 text-sm">
+                <form onSubmit={handleSubmit} className="mt-4 grid grid-cols-2 gap-2 text-sm px-1">
 
                   {/* Seleccionar Empresa */}
                   <div>
@@ -353,46 +365,6 @@ export default function ModalForm({ isOpen, onClose, client, refetch }: FormModa
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     />
                   </div>
-                  {user?.role !== 'admin' ? <div className="grid grid-cols-2 col-span-2 gap-4">
-                    {/* Talonario / No. Factura */}
-
-                    <div>
-                      <label htmlFor="talonNumber" className="block text-gray-700 text-sm font-bold mb-1">
-                        No. Factura:
-                      </label>
-                      <input
-                        type="text"
-                        id="talonNumber"
-                        name="talonNumber"
-                        value={formData.talonNumber || ''}
-                        onChange={handleChange}
-                        placeholder="Ej: TALON-001"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                      />
-                    </div>
-
-                    {/* Seleccionar Metodo de Pago */}
-                    <div>
-                      <label htmlFor="paymentMethodId" className="block text-gray-700 text-sm font-bold mb-1">
-                        Método de Pago:
-                      </label>
-                      <select
-                        id="paymentMethodId"
-                        name="paymentMethodId"
-                        value={formData.paymentMethodId || ""}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                      >
-                        <option value="">Seleccionar Método</option>
-                        {lists?.paymentMethods.map((method) => (
-                          <option key={method.id} value={method.id}>
-                            {method.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div> : <></>}
-
 
                   {/* Valor de afiliación */}
                   <div>
@@ -432,10 +404,10 @@ export default function ModalForm({ isOpen, onClose, client, refetch }: FormModa
                     </select>
                   </div>
 
-                  {/* Seleccionar ARL (Opcional) */}
+                  {/* Seleccionar ARL  */}
                   <div>
                     <label htmlFor="arlId" className="block text-gray-700 text-sm font-bold mb-1">
-                      ARL (Opcional):
+                      ARL :
                     </label>
                     <select
                       id="arlId"
@@ -444,7 +416,7 @@ export default function ModalForm({ isOpen, onClose, client, refetch }: FormModa
                       onChange={handleChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     >
-                      <option value="">Seleccionar ARL (Opcional)</option>
+                      <option value="">Seleccionar ARL </option>
                       {lists?.arl.map((arlItem) => (
                         <option key={arlItem.id} value={arlItem.id}>
                           {arlItem.name}
@@ -474,10 +446,10 @@ export default function ModalForm({ isOpen, onClose, client, refetch }: FormModa
                     </select>
                   </div>
 
-                  {/* Seleccionar CCF (Opcional) */}
+                  {/* Seleccionar CCF  */}
                   <div>
                     <label htmlFor="ccfId" className="block text-gray-700 text-sm font-bold mb-1">
-                      CCF (Opcional):
+                      CCF :
                     </label>
                     <select
                       id="ccfId"
@@ -486,7 +458,7 @@ export default function ModalForm({ isOpen, onClose, client, refetch }: FormModa
                       onChange={handleChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     >
-                      <option value="">Seleccionar CCF (Opcional)</option>
+                      <option value="">Seleccionar CCF </option>
                       {lists?.ccf.map((ccfItem) => (
                         <option key={ccfItem.id} value={ccfItem.id}>
                           {ccfItem.name}
@@ -495,10 +467,10 @@ export default function ModalForm({ isOpen, onClose, client, refetch }: FormModa
                     </select>
                   </div>
 
-                  {/* Seleccionar Fondo de Pensión (Opcional) */}
+                  {/* Seleccionar Fondo de Pensión  */}
                   <div>
                     <label htmlFor="pensionFundId" className="block text-gray-700 text-sm font-bold mb-1">
-                      Fondo de Pensión (Opcional):
+                      Fondo de Pensión :
                     </label>
                     <select
                       id="pensionFundId"
@@ -507,7 +479,7 @@ export default function ModalForm({ isOpen, onClose, client, refetch }: FormModa
                       onChange={handleChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     >
-                      <option value="">Seleccionar Fondo de Pensión (Opcional)</option>
+                      <option value="">Seleccionar Fondo de Pensión </option>
                       {lists?.pensionFunds.map((pfItem) => (
                         <option key={pfItem.id} value={pfItem.id}>
                           {pfItem.name}
@@ -515,7 +487,29 @@ export default function ModalForm({ isOpen, onClose, client, refetch }: FormModa
                       ))}
                     </select>
                   </div>
-
+                  {/* Seleccionar Metodo de Pago */}
+                  {user?.role !== 'admin' ?
+                    <div className="col-span-2 gap-4">
+                      <div>
+                        <label htmlFor="paymentMethodId" className="block text-gray-700 text-sm font-bold mb-1">
+                          Método de Pago:
+                        </label>
+                        <select
+                          id="paymentMethodId"
+                          name="paymentMethodId"
+                          value={formData.paymentMethodId || ""}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        >
+                          <option value="">Seleccionar Método</option>
+                          {lists?.paymentMethods.map((method) => (
+                            <option key={method.id} value={method.id}>
+                              {method.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div> : <></>}
                   {/* Observaciones */}
                   <div className="col-span-2">
                     <label htmlFor="observation" className="block text-gray-700 text-sm font-bold mb-1">

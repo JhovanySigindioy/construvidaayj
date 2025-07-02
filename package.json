@@ -14,6 +14,7 @@
     "@nivo/bar": "^0.98.0",
     "@nivo/core": "^0.98.0",
     "@nivo/line": "^0.98.0",
+    "@tanstack/react-query": "^5.81.5",
     "date-fns": "^4.1.0",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.507.0",

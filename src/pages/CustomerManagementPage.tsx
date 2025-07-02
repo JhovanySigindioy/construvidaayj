@@ -5,7 +5,7 @@ import Table from '../components/Table';
 import Pagination from '../components/Pagination';
 import ColumnSelector from '../components/ColumnSelector';
 import GlobalFilter from '../components/GlobalFilter';
-import { FiEdit, FiTrash2 } from 'react-icons/fi';
+import { FiEdit, FiTrash2, FiFileText, FiDownload } from 'react-icons/fi'; // Iconos para factura
 import { useClientsData } from '../customHooks/useClienteDataTable'; // Asegúrate de que la ruta sea correcta
 import { DataClient, PaymentStatus } from '../types/dataClient'; // Asegúrate de que la ruta sea correcta
 import ModalForm from '../components/ModalForm';
@@ -15,12 +15,13 @@ import { urlBase } from "../globalConfig/config";
 import { FaPlus } from "react-icons/fa";
 import ModalFormCreate from "../components/ModalFormCreate";
 
-// === Helpers ===
+// === Headers & Labels ===
 // Define ALL possible headers, including those that might be hidden for certain roles
 const allPossibleHeaders: (keyof DataClient)[] = [
     'paid',
     'paymentMethodName',
-    'talonNumber',
+    'facturaNumero',
+    'facturaInvoiceStatus',
     'observation',
     'fullName',
     'identification',
@@ -34,14 +35,15 @@ const allPossibleHeaders: (keyof DataClient)[] = [
     'risk',
     'ccf',
     'pensionFund',
-    // 'clientId', // ID de cliente, no se muestra en la tabla
-    // 'affiliationId', // ID de afiliación, no se muestra en la tabla
+    // 'clientId', // ID de cliente, no se muestra en la tabla directamente
+    // 'affiliationId', // ID de afiliación, no se muestra en la tabla directamente
 ];
 
 const headerLabels: Record<keyof DataClient, string> = {
     paid: '¿Pagado?',
-    paymentMethodName: 'Metodo de Pago',
-    talonNumber: 'No. Factura',
+    paymentMethodName: 'Método de Pago',
+    facturaNumero: 'No. Factura',
+    facturaInvoiceStatus: 'Estado Factura',
     observation: 'Observación',
     fullName: 'Nombre completo',
     identification: 'Cédula',
@@ -54,13 +56,16 @@ const headerLabels: Record<keyof DataClient, string> = {
     arl: 'ARL',
     risk: 'Riesgo',
     ccf: 'CCF',
-    pensionFund: 'Fondo pensión',
-    clientId: 'ID Cliente', // Se mantiene el label para referencia, aunque la columna no se muestre
-    affiliationId: 'ID Afiliación', // Se mantiene el label para referencia, aunque la columna no se muestre
+    pensionFund: 'Fondo Pensión',
+    clientId: 'ID Cliente',
+    affiliationId: 'ID Afiliación',
+    facturaPdfPath: 'Ruta PDF Factura', // Aunque no se muestre como columna, es útil para el tipo
+    facturaId: "ID Factura"
 };
 
 export default function CustomerManagementPage() {
     const [loadingPaidIds, setLoadingPaidIds] = useState<number[]>([]);
+    const [loadingFacturaIds, setLoadingFacturaIds] = useState<number[]>([]); // Estado de carga para facturas
     const today = new Date();
     const [selectedMonth, setSelectedMonth] = useState(today.getMonth());
     const [selectedYear, setSelectedYear] = useState(today.getFullYear());
@@ -69,15 +74,10 @@ export default function CustomerManagementPage() {
 
     // Determine initial headers based on user role
     const initialDefaultHeaders = useMemo(() => {
-        // IMPORTANT: Adjust 'admin' and user.role property as per your actual user object structure
-        // If the user has an 'admin' role, filter out 'talonNumber' and 'paymentMethodName'
-        if (user?.role === 'admin') {
-            return allPossibleHeaders.filter(
-                (header) => header !== 'talonNumber' && header !== 'paymentMethodName'
-            );
-        }
+        // Por defecto, mostrar todas las columnas para que el admin tenga vista completa.
+        // Si necesitas ocultar columnas específicas para ciertos roles (ej. 'user'), hazlo aquí.
         return allPossibleHeaders;
-    }, [user]); // Re-calculate if user object changes (e.g., after login or role update)
+    }, [user]);
 
     const [visibleHeaders, setVisibleHeaders] = useState<(keyof DataClient)[]>(initialDefaultHeaders);
 
@@ -86,11 +86,10 @@ export default function CustomerManagementPage() {
         setVisibleHeaders(initialDefaultHeaders);
     }, [initialDefaultHeaders]);
 
-
     const { data, isLoading, error, refetch } = useClientsData({
-        month: selectedMonth + 1,
+        month: selectedMonth + 1, // Los meses en Carbon/PHP son 1-12
         year: selectedYear,
-    });
+    });// debemos reeemplazar esto para usar uno de los hooks nuevo que usan tanstackquery
 
     const [isModalCreateOpen, setIsModalCreateOpen] = useState(false);
     const openModalCreate = () => setIsModalCreateOpen(true);
@@ -102,7 +101,7 @@ export default function CustomerManagementPage() {
     const openModal = () => setIsModalOpen(true);
     const closeModal = () => {
         setIsModalOpen(false);
-        setSelectedClient(null); // Limpiar cliente seleccionado al cerrar
+        setSelectedClient(null);
     };
 
     const [selectedClient, setSelectedClient] = useState<DataClient | null>(null);
@@ -114,29 +113,16 @@ export default function CustomerManagementPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
-
     // Sincroniza localData con los datos de useClientsData
     useEffect(() => {
         setLocalData(data);
     }, [data]);
 
-    console.log("DATA EN PARA LA TABLA", JSON.stringify(data, null, 2));
-
     const columnOptions = useMemo(() => {
-        // Generate column options based on `allPossibleHeaders`
-        // and filter them out if the user is an admin for the selector.
-        let availableHeadersForSelection = allPossibleHeaders;
-
-        if (user?.role === 'admin') { // IMPORTANT: Adjust 'admin' and user.role property as per your actual user object structure
-            availableHeadersForSelection = allPossibleHeaders.filter(
-                (header) => header !== 'talonNumber' && header !== 'paymentMethodName'
-            );
-        }
-
         return [{ key: 'all', label: 'Todas las columnas' }].concat(
-            availableHeadersForSelection.map((key) => ({ key, label: headerLabels[key] }))
+            allPossibleHeaders.map((key) => ({ key, label: headerLabels[key] }))
         );
-    }, [user]); // Depend on user to update options if role changes
+    }, []);
 
     const filteredData = useMemo(() => {
         const lowerFilter = filterText.toLowerCase();
@@ -144,18 +130,15 @@ export default function CustomerManagementPage() {
             const globalMatch =
                 filterText === '' ||
                 (selectedColumn === 'all'
-                    ? visibleHeaders.some((key) => { // Use visibleHeaders here for filtering logic
-                        // Maneja el array de teléfonos para el filtro global
+                    ? visibleHeaders.some((key) => {
                         if (key === 'phones' && Array.isArray(item[key])) {
                             return (item[key] as string[]).some(phone => String(phone).toLowerCase().includes(lowerFilter));
                         }
-                        // Ensure we don't try to access properties that are intentionally hidden
-                        if (!Object.keys(item).includes(key as string)) return false; // Safety check
+                        if (!Object.keys(item).includes(key as string)) return false;
                         return String(item[key] ?? '').toLowerCase().includes(lowerFilter);
                     })
                     : (() => {
-                        // If the selected column is one of the hidden ones, it won't be in visibleHeaders, so it won't match
-                        if (!visibleHeaders.includes(selectedColumn as keyof DataClient)) return true; // If selected is a hidden column, global filter should not break it.
+                        if (!visibleHeaders.includes(selectedColumn as keyof DataClient)) return true;
 
                         const value = item[selectedColumn as keyof DataClient];
                         if (selectedColumn === 'phones' && Array.isArray(value)) {
@@ -166,11 +149,9 @@ export default function CustomerManagementPage() {
 
             const columnMatch = Object.entries(columnFilters).every(([key, value]) => {
                 if (!value) return true;
-                // Ensure we don't try to access properties that are intentionally hidden
-                if (!visibleHeaders.includes(key as keyof DataClient)) return true; // If filtered column is hidden, treat as always matching.
+                if (!visibleHeaders.includes(key as keyof DataClient)) return true;
 
                 const itemValue = item[key as keyof DataClient];
-                // Maneja el array de teléfonos para el filtro por columna
                 if (key === 'phones' && Array.isArray(itemValue)) {
                     return (itemValue as string[]).some(phone => String(phone).toLowerCase().includes(value.toLowerCase()));
                 }
@@ -181,7 +162,7 @@ export default function CustomerManagementPage() {
 
             return globalMatch && columnMatch;
         });
-    }, [localData, filterText, selectedColumn, visibleHeaders, columnFilters]); // Added visibleHeaders to dependencies
+    }, [localData, filterText, selectedColumn, visibleHeaders, columnFilters]);
 
     const paginatedData = useMemo(() => {
         const start = (currentPage - 1) * itemsPerPage;
@@ -198,28 +179,24 @@ export default function CustomerManagementPage() {
     const handleDelete = useCallback(async (item: DataClient) => {
         Swal.fire({
             title: '¿Estás seguro?',
-            text: `¿Quieres eliminar a ${item.fullName}? Esta acción no se puede deshacer.`,
+            text: `¿Quieres eliminar a ${item.fullName}? Esta acción desafiliará al cliente.`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
             cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Sí, eliminar',
+            confirmButtonText: 'Sí, desafiliar',
             cancelButtonText: 'Cancelar',
             reverseButtons: true
         }).then(async (result) => {
             if (!result.isConfirmed) return;
 
-            if (!user || !user.id || !user.token) { // Verifica la información del usuario
+            if (!user || !user.id || !user.token) {
                 Swal.fire('Error!', 'No se encontró la información de autenticación del usuario.', 'error');
                 return;
             }
 
-            console.log(`VALORES DE ELIMINACION:
-            ID AFILIACION: ${item.affiliationId}
-            ID USUARIO LOGUEADO: ${user.id}
-        `);
-
             try {
+                // El endpoint para desafiliar es /affiliations y usa DELETE
                 const deleteResponse = await fetch(`${urlBase}/affiliations`, {
                     method: 'DELETE',
                     headers: {
@@ -228,16 +205,16 @@ export default function CustomerManagementPage() {
                     },
                     body: JSON.stringify({
                         affiliationId: item.affiliationId,
-                        userId: user.id,
+                        userId: user.id, // Pasamos el userId del usuario autenticado
                         reason: 'Desafiliación por eliminación de registro en el sistema (frontend)',
-                        cost: 0.00
+                        cost: 0.00 // Puedes pedir al usuario un costo si aplica
                     }),
                 });
 
                 const deleteData = await deleteResponse.json();
 
                 if (!deleteResponse.ok) {
-                    console.error('Error del backend al eliminar/desafiliar:', deleteData.message || 'Error desconocido.');
+                    console.error('Error del backend al eliminar/desafiliar:', deleteData.message || 'Error desconocido.', deleteData.errors);
                     Swal.fire(
                         'Error!',
                         deleteData.message || 'Hubo un error al eliminar la afiliación y registrar la desafiliación.',
@@ -246,17 +223,13 @@ export default function CustomerManagementPage() {
                     return;
                 }
 
-                console.log('Respuesta exitosa del backend:', deleteData.message);
-
                 Swal.fire(
-                    'Eliminado!',
-                    `${item.fullName} ha sido eliminado correctamente y desafiliado.`,
+                    'Desafiliado!',
+                    `${item.fullName} ha sido desafiliado correctamente.`,
                     'success'
                 );
 
-                setLocalData((prevClients) =>
-                    prevClients.filter((client) => client.affiliationId !== item.affiliationId)
-                );
+                refetch(); // Refrescar los datos después de la eliminación lógica
 
             } catch (error) {
                 console.error("Error en la eliminación (conexión/parsing):", error);
@@ -267,7 +240,7 @@ export default function CustomerManagementPage() {
                 );
             }
         });
-    }, [user, setLocalData]);
+    }, [user, refetch]);
 
     const handleMonthYearChange = useCallback((month: number, year: number) => {
         setSelectedMonth(month);
@@ -297,6 +270,115 @@ export default function CustomerManagementPage() {
             </span>
         );
     };
+
+    // Helper para renderizar el estado de la factura
+    const renderInvoiceStatusBadge = (status: string | null | undefined) => {
+        if (!status) return <span className="text-gray-500">N/A</span>;
+
+        let colorClass = '';
+        switch (status.toLowerCase()) {
+            case 'emitida':
+                colorClass = 'bg-blue-100 text-blue-600';
+                break;
+            case 'anulada':
+                colorClass = 'bg-red-100 text-red-600';
+                break;
+            case 'reemplazada':
+                colorClass = 'bg-yellow-100 text-yellow-700';
+                break;
+            default:
+                colorClass = 'bg-gray-100 text-gray-600';
+                break;
+        }
+
+        return (
+            <span className={`rounded-full px-2 py-1 text-sm font-semibold min-w-[100px] text-center ${colorClass}`}>
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+            </span>
+        );
+    };
+
+    // --- ADICIÓN: Función para manejar la generación de facturas ---
+    const handleGenerateFactura = useCallback(async (item: DataClient) => {
+        if (!user || !user.token) {
+            Swal.fire('Error!', 'No se encontró la informaación de autenticación del usuario.', 'error');
+            return;
+        }
+
+        Swal.fire({
+            title: '¿Generar Factura?',
+            text: `¿Deseas generar una factura para la afiliación de ${item.fullName} (No. Afiliación: ${item.affiliationId})?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#22c55e',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, generar',
+            cancelButtonText: 'Cancelar',
+            reverseButtons: true
+        }).then(async (result) => {
+            if (!result.isConfirmed) return;
+
+            setLoadingFacturaIds((prev) => [...prev, item.affiliationId]); // Indicar carga
+            try {
+                const response = await fetch(`${urlBase}/facturas/generate-from-affiliation`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${user.token}`,
+                    },
+                    body: JSON.stringify({
+                        monthly_affiliation_id: item.affiliationId,
+                        descripcion_general_factura: `Factura por afiliación mensual de ${item.fullName} (${item.identification}).`
+                    }),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    console.error('Error del backend al generar factura:', data.message || 'Error desconocido.', data.errors);
+                    Swal.fire(
+                        'Error!',
+                        data.message || 'Hubo un error al generar la factura.',
+                        'error'
+                    );
+                    return;
+                }
+
+                Swal.fire(
+                    'Factura Generada!',
+                    `Factura ${data.factura.numero_factura} generada exitosamente.`,
+                    'success'
+                );
+
+                refetch(); // Refrescar los datos para mostrar la nueva factura/estado
+                if (data.pdf_url) {
+                    window.open(data.pdf_url, '_blank'); // Abrir PDF en nueva pestaña
+                }
+
+            } catch (error: any) {
+                console.error("Error al generar factura (conexión/parsing):", error);
+                Swal.fire(
+                    'Error!',
+                    'Hubo un problema con la conexión al servidor o al procesar la respuesta al generar la factura. Revisa la consola para más detalles.',
+                    'error'
+                );
+            } finally {
+                setLoadingFacturaIds((prev) => prev.filter((id) => id !== item.affiliationId)); // Quitar indicador de carga
+            }
+        });
+    }, [user, refetch]);
+
+    // --- ADICIÓN: Función para manejar la visualización/descarga de facturas ---
+    const handleViewFactura = useCallback((item: DataClient) => {
+        // Modificación clave: Usar el endpoint de descarga del backend
+        if (item.facturaId) { // Asegurarse de que exista un facturaId
+            const downloadUrl = `${urlBase}/facturas/${item.facturaId}/download`;
+            window.open(downloadUrl, '_blank'); // Abre el PDF en una nueva pestaña
+        } else {
+            Swal.fire('Información', 'No se encontró una factura asociada a esta afiliación. Intenta generar la factura si no existe.', 'info');
+        }
+    }, []);
+
 
     return (
         <>
@@ -352,38 +434,38 @@ export default function CustomerManagementPage() {
                     
                         <div className="overflow-x-auto rounded-lg shadow-lg">
                             <Table<DataClient>
-                                headers={visibleHeaders} // Use visibleHeaders here
+                                headers={visibleHeaders}
                                 data={paginatedData}
+                                idKey={"affiliationId"}
                                 headerLabels={headerLabels}
                                 cellRenderers={{
                                     paid: (value, item) => {
-                                        const loading = loadingPaidIds.includes(item.affiliationId); // Usar `loading` en lugar de `isLoading`
+                                        const loading = loadingPaidIds.includes(item.affiliationId);
 
                                         return (
                                             <div className="relative">
                                                 <select
-                                                    value={value as PaymentStatus} // Asegura el tipado para el select
-                                                    disabled={loading} // Usar el estado de carga específico para el elemento
+                                                    value={value as PaymentStatus}
+                                                    disabled={loading}
                                                     onChange={async (e) => {
                                                         const newPaid: PaymentStatus = e.target.value as PaymentStatus;
-                                                        const prevPaid = value as PaymentStatus; // Guardar el valor anterior por si hay error
+                                                        const prevPaid = value as PaymentStatus;
                                                         const id = item.affiliationId;
 
-                                                        // Actualización optimista
                                                         setLocalData((prev) =>
                                                             prev.map((p) =>
                                                                 p.affiliationId === id ? { ...p, paid: newPaid } : p
                                                             )
                                                         );
 
-                                                        setLoadingPaidIds((prev) => [...prev, id]); // Añadir al ID de carga
+                                                        setLoadingPaidIds((prev) => [...prev, id]);
 
                                                         try {
                                                             const response = await fetch(`${urlBase}/affiliations/paid`, {
                                                                 method: 'PUT',
                                                                 headers: {
                                                                     'Content-Type': 'application/json',
-                                                                    'Authorization': `Bearer ${user?.token}`, // Asegúrate de que `user` y `user.token` no sean nulos
+                                                                    'Authorization': `Bearer ${user?.token}`,
                                                                 },
                                                                 body: JSON.stringify({ affiliationId: id, paid: newPaid }),
                                                             });
@@ -396,21 +478,19 @@ export default function CustomerManagementPage() {
                                                             const result = await response.json();
                                                             const updated = result.affiliation;
 
-                                                            // Actualizar con los datos del backend para reflejar cualquier cambio de fecha
                                                             setLocalData((prev) =>
                                                                 prev.map((p) =>
                                                                     p.affiliationId === id
                                                                         ? {
                                                                             ...p,
                                                                             paid: updated.paid_status,
-                                                                            datePaidReceived: updated.date_paid_received, // Asegúrate de que el backend envíe esto
-                                                                            govRegistryCompletedAt: updated.gov_record_completed_at, // Asegúrate de que el backend envíe esto
-                                                                        }
+                                                                            datePaidReceived: updated.date_paid_received,
+                                                                            govRegistryCompletedAt: updated.gov_record_completed_at,
+                                                                          }
                                                                         : p
                                                                 )
                                                             );
 
-                                                            // ✅ Mostrar toast de éxito
                                                             Swal.fire({
                                                                 toast: true,
                                                                 position: 'bottom-end',
@@ -430,10 +510,9 @@ export default function CustomerManagementPage() {
                                                                 },
                                                             });
 
-                                                        } catch (error: any) { // Capturar el error como `any` para acceder a `message`
+                                                        } catch (error: any) {
                                                             console.error('Error actualizando estado de pago:', error);
 
-                                                            // Revertir la actualización optimista en caso de error
                                                             setLocalData((prev) =>
                                                                 prev.map((p) =>
                                                                     p.affiliationId === id ? { ...p, paid: prevPaid } : p
@@ -444,7 +523,7 @@ export default function CustomerManagementPage() {
                                                                 toast: true,
                                                                 position: 'top-end',
                                                                 icon: 'error',
-                                                                title: error.message || 'Error al actualizar el pago', // Muestra el mensaje del error si está disponible
+                                                                title: error.message || 'Error al actualizar el pago',
                                                                 showConfirmButton: false,
                                                                 timer: 2500,
                                                                 timerProgressBar: true,
@@ -461,7 +540,7 @@ export default function CustomerManagementPage() {
                                                             });
 
                                                         } finally {
-                                                            setLoadingPaidIds((prev) => prev.filter((val) => val !== id)); // Quitar de los IDs en carga
+                                                            setLoadingPaidIds((prev) => prev.filter((val) => val !== id));
                                                         }
                                                     }}
                                                     className={`rounded-full px-2 py-1 text-sm font-semibold border-none focus:outline-none transition-colors duration-200 min-w-[100px] text-center
@@ -512,25 +591,63 @@ export default function CustomerManagementPage() {
                                     },
                                     datePaidReceived: (val) => renderDateBadge(val as string | null, val ? 'blue' : 'yellow'),
                                     govRegistryCompletedAt: (val) => renderDateBadge(val as string | null, val ? 'green' : 'yellow'),
+                                    facturaNumero: (val) => (val ? <span className="font-medium text-gray-800">{val}</span> : <span className="text-gray-500">N/A</span>),
+                                    facturaInvoiceStatus: (val) => renderInvoiceStatusBadge(val as string | null),
                                 }}
-                                rowActions={(item) => (
-                                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 justify-center items-center">
-                                        <button
-                                            onClick={() => handleEdit(item)}
-                                            className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-100 transition-colors duration-200"
-                                            title="Editar"
-                                        >
-                                            <FiEdit size={20} />
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(item)}
-                                            className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-100 transition-colors duration-200"
-                                            title="Eliminar"
-                                        >
-                                            <FiTrash2 size={20} />
-                                        </button>
-                                    </div>
-                                )}
+                                rowActions={(item) => {
+                                    const isFacturaLoading = loadingFacturaIds.includes(item.affiliationId);
+                                    const hasFactura = item.facturaNumero && item.facturaNumero !== 'N/A';
+                                    const isFacturaAnuladaOrReemplazada = item.facturaInvoiceStatus === 'anulada' || item.facturaInvoiceStatus === 'reemplazada';
+
+                                    return (
+                                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 justify-center items-center">
+                                            <button
+                                                onClick={() => handleEdit(item)}
+                                                className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-100 transition-colors duration-200"
+                                                title="Editar"
+                                            >
+                                                <FiEdit size={20} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(item)}
+                                                className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-100 transition-colors duration-200"
+                                                title="Eliminar"
+                                            >
+                                                <FiTrash2 size={20} />
+                                            </button>
+                                            {/* Botón de Factura Dinámico */}
+                                            {hasFactura && !isFacturaAnuladaOrReemplazada ? (
+                                                <button
+                                                    onClick={() => handleViewFactura(item)}
+                                                    className="text-purple-600 hover:text-purple-800 p-1 rounded-full hover:bg-purple-100 transition-colors duration-200 flex items-center gap-1"
+                                                    title="Ver Factura"
+                                                    disabled={isFacturaLoading}
+                                                >
+                                                    {isFacturaLoading ? (
+                                                        <span className="w-4 h-4 border-2 border-t-transparent border-purple-500 rounded-full animate-spin"></span>
+                                                    ) : (
+                                                        <FiDownload size={20} />
+                                                    )}
+                                                    <span className="hidden sm:inline">Ver Factura</span>
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleGenerateFactura(item)}
+                                                    className="text-green-600 hover:text-green-800 p-1 rounded-full hover:bg-green-100 transition-colors duration-200 flex items-center gap-1"
+                                                    title="Generar Factura"
+                                                    disabled={isFacturaLoading}
+                                                >
+                                                    {isFacturaLoading ? (
+                                                        <span className="w-4 h-4 border-2 border-t-transparent border-green-500 rounded-full animate-spin"></span>
+                                                    ) : (
+                                                        <FiFileText size={20} />
+                                                    )}
+                                                    <span className="hidden sm:inline">Generar Factura</span>
+                                                </button>
+                                            )}
+                                        </div>
+                                    );
+                                }}
                             />
                         </div>
 

@@ -1,25 +1,3 @@
-// export type PaymentStatus = "Pagado" | "Pendiente" | "En Proceso";
-
-// export type DataClient = {
-//   clientId: string;
-//   affiliationId: string;
-//   fullName: string;
-//   identification: string;
-//   companyName: string;
-//   value: number;
-//   eps: string;
-//   arl: string;
-//   risk: string;
-//   ccf: string;
-//   pensionFund: string;
-//   paid: PaymentStatus;
-//   observation: string;
-//   datePaidReceived: string;
-//   govRegistryCompletedAt: string;
-//   phones: string[]; 
-// };
-
-
 export type PaymentStatus = "Pagado" | "Pendiente" | "En Proceso";
 
 export interface DataClient {
@@ -38,8 +16,11 @@ export interface DataClient {
     arl: string | null; // Corresponde a 'arl.name' (puede ser nulo si no hay ARL)
     ccf: string | null; // Corresponde a 'ccf.name' (puede ser nulo si no hay CCF)
     pensionFund: string | null; // Corresponde a 'pf.name' (puede ser nulo si no hay fondo de pensión)
-    talonNumber: string | null; // Corresponde a 'ma.talon_number' (puede ser nulo)
+    
     paymentMethodName: string | null; // Corresponde a 'pm.name AS payment_method_name' (puede ser nulo)
     phones: string[]; // Corresponde a GROUP_CONCAT(cp.phone_number), separado en un array en el backend
+    facturaId: number | null; // ADICIÓN: ID de la factura asociada (puede ser nulo)
+    facturaNumero: string | null; // ADICIÓN: Número de la factura (puede ser nulo)
+    facturaInvoiceStatus: string | null; // ADICIÓN: Estado de la factura (puede ser nulo)
+    facturaPdfPath: string | null; // ADICIÓN: Ruta del PDF de la factura (puede ser nulo)
 }
-

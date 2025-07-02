@@ -1,54 +1,63 @@
-// src/context/AuthContext.tsx
-
-import { createContext, useContext, useState, useEffect, useCallback } from "react"; // Añadimos useCallback
-import { AuthContextType } from "../interfaces/authContextType"; // Asegúrate de que estas rutas sean correctas
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
+import { AuthContextType } from "../interfaces/authContextType";
 import { AuthProviderProps } from "../interfaces/authProviderProps";
 import { User } from "../types/user";
 
-// Define la interfaz para el contexto, incluyendo el nuevo estado y función
 interface MyAuthContextType extends AuthContextType {
-    selectedOfficeId: string | number | null; // Cambiado a 'Id' para claridad y puede ser null
-    setSelectedOfficeId: (officeId: string | number | null) => void; // Función para actualizar
+    selectedOfficeId: string | number | null;
+    setSelectedOfficeId: (officeId: string | number | null) => void;
+    isInitialAuthCheckComplete: boolean;
 }
 
-// Creamos el contexto con el tipo actualizado
 const AuthContext = createContext<MyAuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: AuthProviderProps) {
     const [user, setUser] = useState<User | null>(null);
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-    // Nuevo estado para la oficina seleccionada, inicializado como null
     const [selectedOfficeId, setSelectedOfficeId] = useState<string | number | null>(null);
+    const [isInitialAuthCheckComplete, setIsInitialAuthCheckComplete] = useState<boolean>(false);
 
-    // Verificación de autenticación y oficina seleccionada al cargar la app
+    // Cargar estado de autenticación y oficina seleccionada desde localStorage al iniciar
     useEffect(() => {
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-            const userData = JSON.parse(storedUser);
-            setUser(userData);
-            setIsAuthenticated(true);
-        }
-
-        const storedOffice = localStorage.getItem("selectedOffice");
-        if (storedOffice) {
+        const loadAuthData = () => {
             try {
-                // Asume que selectedOfficeString puede ser un ID directamente o un objeto con ID
-                const parsedOffice = JSON.parse(storedOffice);
-                // Si es un objeto { id: 1, name: "Oficina A" }, toma el id
-                // Si es solo el ID "1", parsedOffice ya será 1
-                const officeId = typeof parsedOffice === 'object' && parsedOffice !== null && 'id' in parsedOffice 
-                                ? parsedOffice.id 
-                                : parsedOffice;
-                setSelectedOfficeId(officeId);
-            } catch (e) {
-                console.error("Error parsing selectedOffice from localStorage:", e);
-                setSelectedOfficeId(null); // Asegúrate de resetear si hay un error de parseo
+                const storedUser = localStorage.getItem("user");
+                if (storedUser) {
+                    const userData = JSON.parse(storedUser);
+                    setUser(userData);
+                    setIsAuthenticated(true);
+                } else {
+                    setUser(null);
+                    setIsAuthenticated(false);
+                }
+
+                const storedOffice = localStorage.getItem("selectedOffice");
+                if (storedOffice) {
+                    try {
+                        const parsedOffice = JSON.parse(storedOffice);
+                        const officeId = typeof parsedOffice === 'object' && parsedOffice !== null && 'id' in parsedOffice
+                            ? parsedOffice.id
+                            : parsedOffice;
+                        setSelectedOfficeId(officeId);
+                    } catch {
+                        setSelectedOfficeId(null);
+                    }
+                } else {
+                    setSelectedOfficeId(null);
+                }
+            } catch {
+                setUser(null);
+                setIsAuthenticated(false);
+                setSelectedOfficeId(null);
+            } finally {
+                setIsInitialAuthCheckComplete(true);
             }
-        }
+        };
+
+        loadAuthData();
     }, []);
 
     const login = (userData: User) => {
-        console.log(userData);
         setUser(userData);
         setIsAuthenticated(true);
         localStorage.setItem("user", JSON.stringify(userData));
@@ -60,27 +69,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
         localStorage.removeItem("lists");
         setUser(null);
         setIsAuthenticated(false);
-        setSelectedOfficeId(null); // Reinicia también la oficina al cerrar sesión
+        setSelectedOfficeId(null);
     };
 
-    // Función para establecer la oficina seleccionada y guardarla en localStorage
     const updateSelectedOffice = useCallback((officeId: string | number | null) => {
         setSelectedOfficeId(officeId);
         if (officeId !== null) {
-            localStorage.setItem("selectedOffice", JSON.stringify(officeId)); // Guarda el ID de la oficina
+            localStorage.setItem("selectedOffice", JSON.stringify(officeId));
         } else {
             localStorage.removeItem("selectedOffice");
         }
     }, []);
 
+    const contextValue = useMemo(() => ({
+        isAuthenticated,
+        user,
+        login,
+        logout,
+        selectedOfficeId,
+        setSelectedOfficeId: updateSelectedOffice,
+        isInitialAuthCheckComplete,
+    }), [isAuthenticated, user, selectedOfficeId, updateSelectedOffice, isInitialAuthCheckComplete]);
+
     return (
-        <AuthContext.Provider value={{ isAuthenticated, user, login, logout, selectedOfficeId, setSelectedOfficeId: updateSelectedOffice }}>
+        <AuthContext.Provider value={contextValue}>
             {children}
         </AuthContext.Provider>
     );
 }
 
-// Hook para usar el contexto en cualquier componente
 export function useAuth() {
     const context = useContext(AuthContext);
     if (!context) {
