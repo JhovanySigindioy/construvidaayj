@@ -44,10 +44,10 @@ export default function UsersPaidReport() {
 
     return (
         <div className="w-full max-w-screen-2xl mx-auto px-4 py-4 mb-10 lg:px-12 border border-gray-200 rounded-md">
-            <h2 className="text-2xl font-extrabold text-gray-900 mb-8 text-center">Reporte de Afiliaciones y Pagos</h2>
+            <h2 className="text-2xl font-extrabold text-gray-800 mb-1 text-center">Reporte de Afiliaciones y Pagos</h2>
 
             {/* Selectores de Fecha y Oficina - Centralizados aquí */}
-            <div className="bg-white p-6 rounded-lg mb-8 flex flex-col sm:flex-row gap-6 justify-center items-center">
+            <div className="bg-white p-6 rounded-lg mb-1 flex flex-col sm:flex-row gap-6 justify-center items-center">
                 {/* Selector de Fecha */}
                 <div>
                     <label htmlFor="report-date" className="block text-sm font-medium text-gray-700 mb-1">
@@ -85,7 +85,7 @@ export default function UsersPaidReport() {
 
             {/* Sección de Usuarios Nuevos */}
             <div className="mb-10">
-                <h3 className="text-xl font-bold text-gray-800 mb-4">Usuarios Nuevos (Afiliaciones del día)</h3>
+                <h3 className="text-xl font-bold text-gray-800 hover:text-green-500 mb-4">Usuarios Nuevos (Afiliaciones del día)</h3>
                 <NewUsersTable
                     queryParams={commonQueryParams}
                     officeSelected={selectedOfficeId !== null} // Pasa un prop para indicar si hay oficina seleccionada
@@ -95,7 +95,7 @@ export default function UsersPaidReport() {
 
             {/* Sección de Usuarios Antiguos */}
             <div>
-                <h3 className="text-xl font-bold text-gray-800 mb-4">Usuarios Antiguos (Pagos del día)</h3>
+                <h3 className="text-xl font-bold text-gray-800 hover:text-yellow-500 mb-4">Usuarios Antiguos (Pagos del día)</h3>
                 <OldUsersTable
                     queryParams={commonQueryParams}
                     officeSelected={selectedOfficeId !== null}

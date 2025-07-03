@@ -13,7 +13,7 @@ export interface OldAffiliation {
   ccf: string;
   pensionFund: string;
   observation: string;
-  paid: string;
+  paid: 'Pagado' | 'Pendiente' | 'En Proceso';
   datePaidReceived: string;
   govRegistryCompletedAt: string | null;
   paymentMethodName: string;
