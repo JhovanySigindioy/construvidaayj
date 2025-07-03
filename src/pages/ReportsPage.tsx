@@ -10,7 +10,7 @@ export default function ReportsPage() {
     <div className="flex flex-col gap-6 p-5 fade-in">
       {/* Selector */}
       <div className="flex gap-10 justify-center items-center">
-        <h1><strong>Porfavor seleccciona un reporte</strong></h1>
+        <h1><strong>Porfavor selecccione un reporte</strong></h1>
         <select
           value={selectedReport}
           onChange={(e) => setSelectedReport(e.target.value)}

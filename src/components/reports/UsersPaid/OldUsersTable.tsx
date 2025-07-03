@@ -55,7 +55,7 @@ export default function OldUsersTable({ queryParams, officeSelected, dateSelecte
 
     return (
         // Se elimina el div principal con max-w, px, py ya que estará en el componente padre
-        <div className="bg-yellow-500 rounded-lg shadow-md p-1"> {/* Contenedor para la tabla interna */}
+        <div className="bg-yellow-500 bg-opacity-20 border-4 border-yellow-500 rounded-lg shadow-md "> {/* Contenedor para la tabla interna */}
             {/* Se elimina el header y los selectores */}
 
             <div className="overflow-x-auto"> {/* Mantener el scroll horizontal */}
@@ -85,7 +85,7 @@ export default function OldUsersTable({ queryParams, officeSelected, dateSelecte
                 )}
 
                 {!loading && !error && (!oldUsersList || oldUsersList.length === 0) && (
-                    <p className="p-4 text-center text-gray-600">
+                    <p className="p-4 text-center text-gray-700">
                         {/* Mensaje ajustado para depender de los props */}
                         {!officeSelected || !dateSelected
                             ? 'Por favor, selecciona una fecha y una oficina para ver este reporte.'
