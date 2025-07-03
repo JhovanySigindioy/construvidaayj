@@ -111,7 +111,6 @@ export default function ModalForm({ isOpen, onClose, client, refetch }: FormModa
         paid: client.paid,
         datePaidReceived: formatDateForInput(client.datePaidReceived),
         govRegistryCompletedAt: formatDateForInput(client.govRegistryCompletedAt),
-        // talonNumber: client.talonNumber || null, // ELIMINADO
         paymentMethodId: paymentMethodId,
         facturaId: client.facturaId || null, // Mapeo del nuevo campo
         facturaNumero: client.facturaNumero || null, // Mapeo del nuevo campo
@@ -159,7 +158,7 @@ export default function ModalForm({ isOpen, onClose, client, refetch }: FormModa
 
     const result = await Swal.fire({
       title: "¿Estás seguro?",
-      text: "Se actualizarán los datos del cliente.",
+      text: "Se actualizarán los datos de la afiliaicón.",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
@@ -203,10 +202,9 @@ export default function ModalForm({ isOpen, onClose, client, refetch }: FormModa
         paid_status: formData.paid,
         date_paid_received: formData.datePaidReceived,
         gov_record_completed_at: formData.govRegistryCompletedAt,
-        // talon_number: formData.talonNumber, // ELIMINADO del payload
+        
         payment_method_id: formData.paymentMethodId,
       };
-      console.log("DATOS ENVIADOS PARA ACTUALIZAR:::", JSON.stringify(payload, null, 2));
       const response = await fetch(`${urlBase}/affiliations`, {
         method: "PUT",
         headers: {
@@ -220,7 +218,7 @@ export default function ModalForm({ isOpen, onClose, client, refetch }: FormModa
         const errorData = await response.json();
         throw new Error(errorData.message || "Error al guardar los datos");
       }
-
+      Swal.close();
       Swal.fire({
         title: "¡Guardado!",
         text: "Los datos han sido actualizados exitosamente.",
@@ -230,7 +228,7 @@ export default function ModalForm({ isOpen, onClose, client, refetch }: FormModa
       if (refetch) refetch();
       onClose();
     } catch (error: any) {
-      console.error("Error al guardar los datos:", error);
+      Swal.close();
       Swal.fire({
         title: "Error",
         text: error.message || "Hubo un problema al guardar los datos.",
@@ -238,9 +236,9 @@ export default function ModalForm({ isOpen, onClose, client, refetch }: FormModa
       });
     } finally {
       setLoading(false);
-      if (Swal.isVisible()) {
-        Swal.close();
-      }
+      // if (Swal.isVisible()) {
+      //   Swal.close();
+      // }
     }
   };
 
@@ -333,6 +331,7 @@ export default function ModalForm({ isOpen, onClose, client, refetch }: FormModa
                       name="fullName" // Añadido NAME
                       value={formData.fullName}
                       onChange={handleChange} // Añadido onChange
+                      required
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     />
                   </div>
@@ -346,6 +345,7 @@ export default function ModalForm({ isOpen, onClose, client, refetch }: FormModa
                       name="identification" // Añadido NAME
                       value={formData.identification}
                       onChange={handleChange} // Añadido onChange
+                      required
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     />
                   </div>
@@ -379,7 +379,6 @@ export default function ModalForm({ isOpen, onClose, client, refetch }: FormModa
                       onChange={handleChange}
                       placeholder="Ej: 150000"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                      required
                     />
                   </div>
 
@@ -488,28 +487,28 @@ export default function ModalForm({ isOpen, onClose, client, refetch }: FormModa
                     </select>
                   </div>
                   {/* Seleccionar Metodo de Pago */}
-                  {user?.role !== 'admin' ?
-                    <div className="col-span-2 gap-4">
-                      <div>
-                        <label htmlFor="paymentMethodId" className="block text-gray-700 text-sm font-bold mb-1">
-                          Método de Pago:
-                        </label>
-                        <select
-                          id="paymentMethodId"
-                          name="paymentMethodId"
-                          value={formData.paymentMethodId || ""}
-                          onChange={handleChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                        >
-                          <option value="">Seleccionar Método</option>
-                          {lists?.paymentMethods.map((method) => (
-                            <option key={method.id} value={method.id}>
-                              {method.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div> : <></>}
+
+                  <div className="col-span-2 gap-4">
+                    <div>
+                      <label htmlFor="paymentMethodId" className="block text-gray-700 text-sm font-bold mb-1">
+                        Método de Pago:
+                      </label>
+                      <select
+                        id="paymentMethodId"
+                        name="paymentMethodId"
+                        value={formData.paymentMethodId || ""}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      >
+                        <option value="">Seleccionar Método</option>
+                        {lists?.paymentMethods.map((method) => (
+                          <option key={method.id} value={method.id}>
+                            {method.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
                   {/* Observaciones */}
                   <div className="col-span-2">
                     <label htmlFor="observation" className="block text-gray-700 text-sm font-bold mb-1">

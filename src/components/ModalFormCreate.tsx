@@ -198,8 +198,6 @@ export default function ModalFormCreate({ isOpen, onClose, refetch }: ModalFormC
         },
       };
 
-      console.log('Payload enviado:', payload);
-
       // Enviar la solicitud POST al endpoint de creación de afiliaciones
       const response = await fetch(`${urlBase}/monthly-affiliations`, {
         method: "POST",
@@ -214,7 +212,7 @@ export default function ModalFormCreate({ isOpen, onClose, refetch }: ModalFormC
         const errorData = await response.json();
         throw new Error(errorData.message || "Error al guardar los datos del cliente y la afiliación, inténtelo de nuevo más tarde");
       }
-
+      Swal.close();
       Swal.fire({
         title: "¡Guardado!",
         text: "Los datos del cliente y su primera afiliación han sido guardados exitosamente.",
@@ -224,7 +222,7 @@ export default function ModalFormCreate({ isOpen, onClose, refetch }: ModalFormC
       if (refetch) refetch(); // Refrescar los datos en la tabla principal
       onClose(); // Cerrar el modal
     } catch (error: any) { // Tipar error como `any` para acceder a `message`
-      console.error("Error al guardar los datos:", error);
+      Swal.close();
       Swal.fire({
         title: "Error",
         text: error.message || "Hubo un problema al guardar los datos.",
@@ -233,9 +231,9 @@ export default function ModalFormCreate({ isOpen, onClose, refetch }: ModalFormC
       });
     } finally {
       setLoading(false); // Desactivar estado de carga
-      if (Swal.isVisible()) { // Asegurarse de que Swal esté abierto antes de cerrarlo
-        Swal.close();
-      }
+      // if (Swal.isVisible()) { // Asegurarse de que Swal esté abierto antes de cerrarlo
+      //   Swal.close();
+      // }
     }
   };
 
@@ -377,11 +375,11 @@ export default function ModalFormCreate({ isOpen, onClose, refetch }: ModalFormC
                       type="number"
                       id="value"
                       name="value"
-                      value={formData.value === 0 ? '' : formData.value} // Mostrar vacío si es 0
+                      value={formData.value === 0 ? '' : formData.value}
+                      // Mostrar vacío si es 0
                       onChange={handleChange}
-                      placeholder="Ej: 150000"
+                      placeholder="Ej: 75000"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                      required
                     />
                   </div>
 
@@ -491,29 +489,28 @@ export default function ModalFormCreate({ isOpen, onClose, refetch }: ModalFormC
                   </div>
 
                   {/* Seleccionar Metodo de Pago */}
-                  {user?.role !== 'admin' ?
-                    <div className="col-span-2 gap-4">
-                      <div>
-                        <label htmlFor="paymentMethodName" className="block text-gray-700 text-sm font-bold mb-1">
-                          Método de Pago:
-                        </label>
-                        <select
-                          id="paymentMethodName"
-                          name="paymentMethodName"
-                          value={formData.paymentMethodName || ""}
-                          onChange={handleChange}
-                          required
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                        >
-                          <option value="">Seleccionar Método</option>
-                          {lists?.paymentMethods.map((method) => (
-                            <option key={method.id} value={method.name}>
-                              {method.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div> : <></>}
+
+                  <div className="col-span-2 gap-4">
+                    <div>
+                      <label htmlFor="paymentMethodName" className="block text-gray-700 text-sm font-bold mb-1">
+                        Método de Pago:
+                      </label>
+                      <select
+                        id="paymentMethodName"
+                        name="paymentMethodName"
+                        value={formData.paymentMethodName || ""}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      >
+                        <option value="">Seleccionar Método</option>
+                        {lists?.paymentMethods.map((method) => (
+                          <option key={method.id} value={method.name}>
+                            {method.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
 
                   {/* Observaciones */}
                   <div className="col-span-2">

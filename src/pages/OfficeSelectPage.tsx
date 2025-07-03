@@ -79,7 +79,7 @@ export default function OfficeSelectPage() {
                     >
                         {office.logo_url && (
                             <img
-                                src={"/sucursal.png"} // Asegúrate de que esta ruta de imagen sea correcta
+                                src={office.logo_url} // Asegúrate de que esta ruta de imagen sea correcta
                                 alt={office.name}
                                 className="w-52 h-52 object-contain mb-4"
                             />
