@@ -1,119 +1,99 @@
-import Swal from "sweetalert2";
 import { useState, useMemo, useEffect, useCallback } from 'react';
+import Swal from "sweetalert2";
 import MonthYearSelector from '../components/MonthYearSelector';
 import Table from '../components/Table';
 import Pagination from '../components/Pagination';
 import ColumnSelector from '../components/ColumnSelector';
 import GlobalFilter from '../components/GlobalFilter';
-import { FiEdit, FiFileText } from 'react-icons/fi'; // Importar FiFileText para el icono de factura
-
+import { FiEdit, FiFileText } from 'react-icons/fi';
 import { UnsubscribedAffiliationData, PaymentStatus } from '../types/UnsubscribedAffiliationData';
 import Loading from "../components/Loading";
-import { useAuth } from "../context/AuthContext";
-
 import { useUnsubscribedAffiliationsData } from '../customHooks/useUnsubscribedAffiliationsData';
 import ModalEditUnsubscription from '../components/ModalEditUnsubscription';
-import { urlBase } from "../globalConfig/config"; // Asegúrate de importar urlBase
+import { urlBase } from "../globalConfig/config";
+import PaymentStatusSelector from '../components/PaymentStatusSelector';
 
-// === Helpers ===
-// Define ALL possible headers, excluding 'actions' which will be handled by rowActions.
-// El orden de las columnas se define aquí, con las de desafiliación al inicio.
-const allPossibleHeadersUnsubscribed: (keyof UnsubscribedAffiliationData)[] = [
-    // Columnas de desafiliación e inactivación al inicio
-    'unsubscriptionDate',
+
+const defaultVisibleHeadersUnsubscribed: (keyof UnsubscribedAffiliationData)[] = [
+    // Actions / Key unsubscription info
     'unsubscriptionReason',
+    'unsubscriptionPaidStatus', // Interactive selector
     'unsubscriptionCost',
-    'unsubscriptionObservation',
-    'deletedAt',
-    'deletedByUserName',
-    // Resto de columnas
+    'unsubscriptionPaidDate',
     'fullName',
     'identification',
-    'phones',
     'companyName',
-    'value',
+    'phones',
+    'datePaidReceived',
+    'govRegistryCompletedAt',
+    'paymentMethodName',
+    'paid',
     'eps',
     'arl',
     'risk',
     'ccf',
     'pensionFund',
-    'observation',
-    'paid',
-    'datePaidReceived',
-    'govRegistryCompletedAt',
-    'talonNumber',
-    'paymentMethodName',
-    'facturaNumero', // Añadida para que aparezca en la tabla
-    'facturaInvoiceStatus', // Añadida para que aparezca en la tabla
+    'facturaInvoiceStatus',
+    'facturaNumero',
+];
+
+// Todas las posibles cabeceras, incluyendo IDs y observaciones/deletedAt ocultas, para el selector de columnas.
+const allPossibleHeadersUnsubscribed: (keyof UnsubscribedAffiliationData)[] = [
+    ...defaultVisibleHeadersUnsubscribed,
+    'unsubscriptionRecordId',
+    'unsubscriptionObservation', // Oculta por defecto
+    'deletedAt', // Oculta por defecto
+    'clientId',
+    'affiliationId',
+    'companyId',
+    'facturaId',
+    'observation', // Oculta por defecto (observación original)
+    'facturaPdfPath', // No se muestra en la tabla pero se mantiene para completitud
 ];
 
 // Etiquetas para las cabeceras de la tabla, cubriendo todas las propiedades.
-// 'actions' ya no es una etiqueta de cabecera porque se maneja con rowActions.
 const headerLabels: Record<keyof UnsubscribedAffiliationData, string> = {
     clientId: 'ID Cliente',
     affiliationId: 'ID Afiliación',
-    fullName: 'Nombre completo',
+    fullName: 'Nombre Completo',
     identification: 'Cédula',
     companyName: "Empresa",
     companyId: "ID Empresa",
-    phones: "Teléfono",
-    datePaidReceived: 'Pago Recibido (Original)',
-    govRegistryCompletedAt: 'Fecha Afiliacion (Original)',
+    phones: "Teléfonos",
+    datePaidReceived: 'Fecha Pago (Original)',
+    govRegistryCompletedAt: 'Fecha Afiliación (Original)',
     value: 'Valor (Original)',
     eps: 'EPS',
     arl: 'ARL',
     risk: 'Riesgo',
     ccf: 'CCF',
-    pensionFund: 'Fondo pensión',
+    pensionFund: 'Fondo Pensión',
     observation: 'Observación (Original)',
     paid: 'Estado Pago (Original)',
     unsubscriptionRecordId: 'ID Retiro',
-    unsubscriptionDate: 'Fecha Retiro',
+    unsubscriptionPaidDate: 'Fecha Pago Retiro',
     unsubscriptionReason: 'Razón Retiro',
     unsubscriptionCost: 'Costo Retiro',
+    unsubscriptionPaidStatus: 'Estado Pago Retiro',
     unsubscriptionObservation: 'Obs. Retiro',
     deletedAt: 'Fecha Inactivación DB',
     deletedByUserName: 'Inactivado Por',
-    talonNumber: 'No. Recibo/Talón (Original)', // Cambiado a Recibo/Talón para claridad
     paymentMethodName: 'Método Pago (Original)',
-    facturaId: 'ID Factura', // Etiqueta para el nuevo campo
-    facturaNumero: 'No. Factura', // Etiqueta para el nuevo campo
-    facturaInvoiceStatus: 'Estado Factura', // Etiqueta para el nuevo campo
-    facturaPdfPath: 'Ruta PDF Factura', // Etiqueta para el nuevo campo
+    facturaId: 'ID Factura',
+    facturaNumero: 'Número Factura',
+    facturaInvoiceStatus: 'Estado Factura',
+    facturaPdfPath: 'Ruta PDF Factura',
 };
 
 export default function UnsubscriptionsPage() {
-
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const openModal = () => setIsModalOpen(true);
-    const closeModal = () => {
-        setIsModalOpen(false);
-        setSelectedClient(null); // Limpiar cliente seleccionado al cerrar
-    };
-
     const [selectedClient, setSelectedClient] = useState<UnsubscribedAffiliationData | null>(null);
 
     const today = new Date();
     const [selectedMonth, setSelectedMonth] = useState(today.getMonth());
     const [selectedYear, setSelectedYear] = useState(today.getFullYear());
 
-    const { user } = useAuth(); // Obtener el usuario del contexto de autenticación
-
-    // Determine initial headers based on user role
-    const initialDefaultHeadersUnsubscribed = useMemo(() => {
-        // Por defecto, mostrar todas las columnas. Si quieres ocultar para roles no-admin,
-        // la lógica iría aquí (ej: user?.role !== 'admin' ? filterHeaders : allHeaders).
-        // Para este caso, un admin debería ver todo.
-        return allPossibleHeadersUnsubscribed;
-    }, [user]); // Recalcula si el objeto de usuario cambia (ej. después de iniciar sesión o actualizar el rol)
-
-    // Estado para las cabeceras visibles, inicializado según el rol del usuario.
-    const [visibleHeaders, setVisibleHeaders] = useState<(keyof UnsubscribedAffiliationData)[]>(initialDefaultHeadersUnsubscribed);
-
-    // Efecto para actualizar visibleHeaders si initialDefaultHeadersUnsubscribed cambia dinámicamente.
-    useEffect(() => {
-        setVisibleHeaders(initialDefaultHeadersUnsubscribed);
-    }, [initialDefaultHeadersUnsubscribed]);
+    const [visibleHeaders, setVisibleHeaders] = useState<(keyof UnsubscribedAffiliationData)[]>(defaultVisibleHeadersUnsubscribed);
 
     const { data, isLoading, error, refetch } = useUnsubscribedAffiliationsData({
         month: selectedMonth + 1,
@@ -123,112 +103,102 @@ export default function UnsubscriptionsPage() {
     const [localData, setLocalData] = useState<UnsubscribedAffiliationData[]>([]);
     const [filterText, setFilterText] = useState('');
     const [selectedColumn, setSelectedColumn] = useState('all');
-
+    // columnFilters se declara pero no se usa activamente en la lógica de filtrado global.
+    // Si necesitas filtros por columna individuales, deberías implementarlos en filteredData.
     const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
     useEffect(() => {
         setLocalData(data || []);
+        setCurrentPage(1); // Reinicia la página al cargar nuevos datos
     }, [data]);
 
     const columnOptions = useMemo(() => {
-        let availableHeadersForSelection = allPossibleHeadersUnsubscribed;
-
-        const idOptions = [
-            { key: 'clientId', label: headerLabels.clientId },
-            { key: 'affiliationId', label: headerLabels.affiliationId },
-            { key: 'companyId', label: headerLabels.companyId },
-            { key: 'unsubscriptionRecordId', label: headerLabels.unsubscriptionRecordId },
-            { key: 'facturaId', label: headerLabels.facturaId }, // Añadido para selección
-        ];
-
-        // Construye todas las opciones, filtrando duplicados.
-        const allOptions = [{ key: 'all', label: 'Todas las columnas' }].concat(
-            availableHeadersForSelection.map((key) => ({ key, label: headerLabels[key] })),
-            idOptions
-        );
-        return allOptions.filter((item, index, self) =>
-            index === self.findIndex((t) => t.key === item.key)
-        ); // Filtra duplicados
-    }, [user]); // Dependencia de user para recalcular si el rol cambia
+        const options = allPossibleHeadersUnsubscribed
+            .filter(key => key !== 'facturaPdfPath') // Excluye 'facturaPdfPath' de las columnas de búsqueda
+            .map((key) => ({
+                key,
+                label: headerLabels[(key as keyof UnsubscribedAffiliationData)]
+            }));
+        // Añade 'Todas las columnas' al inicio
+        return [{ key: 'all', label: 'Todas las columnas' }, ...options];
+    }, []);
 
     const filteredData = useMemo(() => {
         const lowerFilter = filterText.toLowerCase();
+
         return localData.filter((item) => {
             const globalMatch =
                 filterText === '' ||
                 (selectedColumn === 'all'
                     ? visibleHeaders.some((key) => {
-                        // Maneja el array de teléfonos para el filtro global
-                        if (key === 'phones' && Array.isArray(item[key])) {
-                            return (item[key] as string[]).some(phone => String(phone).toLowerCase().includes(lowerFilter));
+                        // Manejo especial para 'facturaNumero' y 'phones'
+                        if (key === 'facturaNumero') {
+                            return String(item.facturaNumero ?? '').toLowerCase().includes(lowerFilter);
                         }
-                        // Asegúrate de que no intentamos acceder a propiedades que no existen o están ocultas.
-                        const itemValue = item[key];
+                        if (key === 'phones' && Array.isArray(item[(key as keyof UnsubscribedAffiliationData)])) {
+                            return (item[(key as keyof UnsubscribedAffiliationData)] as string[]).some(phone => String(phone).toLowerCase().includes(lowerFilter));
+                        }
+                        const itemValue = item[(key as keyof UnsubscribedAffiliationData)];
                         return String(itemValue ?? '').toLowerCase().includes(lowerFilter);
                     })
                     : (() => {
-                        // Si la columna seleccionada no está en visibleHeaders (está oculta), no se filtra directamente por ella.
-                        if (!visibleHeaders.includes(selectedColumn as keyof UnsubscribedAffiliationData)) {
-                            return true;
-                        }
-
-                        const value = item[selectedColumn as keyof UnsubscribedAffiliationData];
+                        // Permite búsqueda en IDs ocultos, observaciones y deletedAt si están seleccionados
+                        const value = item[(selectedColumn as keyof UnsubscribedAffiliationData)];
                         if (selectedColumn === 'phones' && Array.isArray(value)) {
                             return value.some(phone => String(phone).toLowerCase().includes(lowerFilter));
                         }
                         return String(value ?? '').toLowerCase().includes(lowerFilter);
                     })());
 
-            const columnMatch = Object.entries(columnFilters).every(([key, value]) => {
-                if (!value) return true;
-
-                // Asegúrate de que no intentamos acceder a propiedades que no existen o están ocultas.
-                if (!visibleHeaders.includes(key as keyof UnsubscribedAffiliationData)) return true;
-
-                const itemValue = item[key as keyof UnsubscribedAffiliationData];
-                // Manejo especial para arrays de teléfonos en filtros de columna
-                if (key === 'phones' && Array.isArray(itemValue)) {
-                    return itemValue.some(phone => String(phone).toLowerCase().includes(value.toLowerCase()));
-                }
-                return String(itemValue ?? '')
-                    .toLowerCase()
-                    .includes(value.toLowerCase());
-            });
-
-            return globalMatch && columnMatch;
+            // Si se necesitara filtrar por `columnFilters`, la lógica iría aquí
+            // const specificColumnMatch = ...; return globalMatch && specificColumnMatch;
+            return globalMatch;
         });
-    }, [localData, filterText, selectedColumn, visibleHeaders, columnFilters]);
+    }, [localData, filterText, selectedColumn, visibleHeaders]);
+
 
     const paginatedData = useMemo(() => {
         const start = (currentPage - 1) * itemsPerPage;
         return filteredData.slice(start, start + itemsPerPage);
-    }, [currentPage, filteredData]);
+    }, [currentPage, filteredData, itemsPerPage]);
 
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
+    const openModal = useCallback(() => setIsModalOpen(true), []);
+    const closeModal = useCallback(() => {
+        setIsModalOpen(false);
+        setSelectedClient(null);
+    }, []);
+
     const handleEdit = useCallback((item: UnsubscribedAffiliationData) => {
-        setSelectedClient(item); // selectedClient ahora es UnsubscribedAffiliationData
-        openModal(); // Abre el modal de edición de desafiliación
+        setSelectedClient(item);
+        openModal();
     }, [openModal]);
 
     const handleMonthYearChange = useCallback((month: number, year: number) => {
         setSelectedMonth(month);
         setSelectedYear(year);
-        setCurrentPage(1);
+        setCurrentPage(1); // Reinicia la página al cambiar mes/año
     }, []);
 
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [columnFilters]);
-
-    // Helper para renderizar insignias de fecha
+    // Función para renderizar la fecha con un badge de color
     const renderDateBadge = useCallback((
         date: string | null | undefined,
         color: 'green' | 'blue' | 'yellow' | 'red' | 'gray' = 'yellow'
     ) => {
-        const dateText = date ? new Date(date).toLocaleDateString('es-CO') : 'N/A';
+        let dateText = 'N/A';
+        if (date) {
+            const d = date.includes('T') ? new Date(date) : (() => {
+                const [year, month, day] = date.split('-').map(Number);
+                return new Date(year, month - 1, day);
+            })();
+
+            if (!isNaN(d.getTime())) {
+                dateText = d.toLocaleDateString('es-CO');
+            }
+        }
 
         const colorClasses = {
             green: 'bg-green-100 text-green-600',
@@ -239,18 +209,18 @@ export default function UnsubscriptionsPage() {
         };
 
         return (
-            <span className={`rounded-full px-2 py-1 text-sm font-semibold min-w-[100px] text-center ${colorClasses[color]}`}>
+            <span className={`rounded-full px-2 py-1 text-sm font-semibold min-w-[100px] text-center ${colorClasses[(color as keyof typeof colorClasses)]}`}>
                 {dateText}
             </span>
         );
     }, []);
 
-    // Helper para renderizar el estado de la factura
-    const renderInvoiceStatusBadge = (status: string | null | undefined) => {
+    // Función para renderizar el estado de la factura con un badge
+    const renderInvoiceStatusBadge = useCallback((status: string | null | undefined) => {
         if (!status) return <span className="text-gray-500">N/A</span>;
 
         let colorClass = '';
-        switch (status.toLowerCase()) {
+        switch (status?.toLowerCase()) {
             case 'emitida':
                 colorClass = 'bg-blue-100 text-blue-600';
                 break;
@@ -267,21 +237,35 @@ export default function UnsubscriptionsPage() {
 
         return (
             <span className={`rounded-full px-2 py-1 text-sm font-semibold min-w-[100px] text-center ${colorClass}`}>
-                {status.charAt(0).toUpperCase() + status.slice(1)}
+                {status.charAt(0).toUpperCase() + (status?.slice(1) || '')}
             </span>
         );
-    };
+    }, []);
 
-    // --- ADICIÓN: Función para manejar la visualización/descarga de facturas ---
+    // Función para manejar la visualización de la factura
     const handleViewFactura = useCallback((item: UnsubscribedAffiliationData) => {
-        if (item.facturaId) { // Asegurarse de que exista un facturaId
+        if (item.facturaId) {
             const downloadUrl = `${urlBase}/facturas/${item.facturaId}/download`;
-            window.open(downloadUrl, '_blank'); // Abre el PDF en una nueva pestaña
+            window.open(downloadUrl, '_blank');
         } else {
-            Swal.fire('Información', 'No se encontró una factura asociada a esta afiliación desafiliada.', 'info');
+            Swal.fire('Información', 'No se encontró una factura asociada a esta desafiliación.', 'info');
         }
     }, []);
 
+    // Función para manejar el cambio de estado de pago de la desafiliación
+    const handleUnsubscriptionPaymentStatusChange = useCallback((updatedUnsubscription: { unsubscriptionRecordId: number, paid_status: PaymentStatus, unsubscriptionPaidDate: string | null }) => {
+        setLocalData(prevData =>
+            prevData.map(item =>
+                item.unsubscriptionRecordId === updatedUnsubscription.unsubscriptionRecordId
+                    ? {
+                        ...item,
+                        unsubscriptionPaidStatus: updatedUnsubscription.paid_status,
+                        unsubscriptionPaidDate: updatedUnsubscription.unsubscriptionPaidDate,
+                    }
+                    : item
+            )
+        );
+    }, []);
 
     return (
         <>
@@ -330,7 +314,7 @@ export default function UnsubscriptionsPage() {
                             <Table<UnsubscribedAffiliationData>
                                 headers={visibleHeaders}
                                 data={paginatedData}
-                                idKey="affiliationId"
+                                idKey="unsubscriptionRecordId"
                                 headerLabels={headerLabels}
                                 cellRenderers={{
                                     phones: (value: string | number | string[] | [] | undefined) => {
@@ -370,29 +354,75 @@ export default function UnsubscriptionsPage() {
                                         }
                                         return val;
                                     },
-                                    datePaidReceived: (val) => renderDateBadge(val as string | null, val ? 'blue' : 'yellow'),
-                                    govRegistryCompletedAt: (val) => renderDateBadge(val as string | null, val ? 'green' : 'yellow'),
-                                    unsubscriptionDate: (val) => renderDateBadge(val as string | null, val ? 'red' : 'yellow'), // Rojo para la fecha de retiro
-                                    deletedAt: (val) => renderDateBadge(val as string | null, val ? 'gray' : 'yellow'), // Gris para deletedAt
-
-                                    // Renderizado para 'paid'
-                                    paid: (value) => {
-                                        const status = value as PaymentStatus;
-                                        let colorClass = 'bg-gray-100 text-gray-800';
-                                        if (status === 'Pagado') colorClass = 'bg-green-100 text-green-800';
-                                        else if (status === 'Pendiente') colorClass = 'bg-yellow-100 text-yellow-800';
-                                        else if (status === 'En Proceso') colorClass = 'bg-sky-100 text-blue-800';
-
-                                        return (
-                                            <span className={`rounded-full px-2 py-1 text-sm font-semibold min-w-[100px] text-center ${colorClass}`}>
-                                                {status}
-                                            </span>
-                                        );
+                                    // Formato de fecha sin badges
+                                    datePaidReceived: (val) => {
+                                        let dateText = 'N/A';
+                                        if (val) {
+                                            const d = (val as string).includes('T') ? new Date(val as string) : (() => {
+                                                const [year, month, day] = (val as string).split('-').map(Number);
+                                                return new Date(year, month - 1, day);
+                                            })();
+                                            if (!isNaN(d.getTime())) {
+                                                dateText = d.toLocaleDateString('es-CO');
+                                            }
+                                        }
+                                        return dateText;
                                     },
-                                    facturaNumero: (val) => (val ? <span className="font-medium text-gray-800">{val}</span> : <span className="text-gray-500">N/A</span>),
+                                    govRegistryCompletedAt: (val) => {
+                                        let dateText = 'N/A';
+                                        if (val) {
+                                            const d = (val as string).includes('T') ? new Date(val as string) : (() => {
+                                                const [year, month, day] = (val as string).split('-').map(Number);
+                                                return new Date(year, month - 1, day);
+                                            })();
+                                            if (!isNaN(d.getTime())) {
+                                                dateText = d.toLocaleDateString('es-CO');
+                                            }
+                                        }
+                                        return dateText;
+                                    },
+                                    // Fecha de pago de retiro CON badge
+                                    unsubscriptionPaidDate: (val) => renderDateBadge(val as string | null, val ? 'red' : 'yellow'),
+                                    // deletedAt sigue usando badge si así lo deseas
+                                    deletedAt: (val) => renderDateBadge(val as string | null, val ? 'gray' : 'yellow'),
+
+                                    // Para 'paid', solo el valor de texto
+                                    paid: (value) => (value ? String(value) : 'N/A'),
+
+                                    unsubscriptionPaidStatus: (value, item) => (
+                                        <PaymentStatusSelector
+                                            currentStatus={value as PaymentStatus}
+                                            unsubscriptionRecordId={item.unsubscriptionRecordId!}
+                                            originalUnsubscriptionPaidDate={item.unsubscriptionPaidDate}
+                                            onStatusChangeSuccess={handleUnsubscriptionPaymentStatusChange}
+                                        />
+                                    ),
+                                    facturaNumero: (val, item) => (
+                                        <div className="flex items-center gap-2">
+                                            {val ? <span className="font-medium text-gray-800">{val}</span> : <span className="text-gray-500">N/A</span>}
+                                            {item.facturaId ? (
+                                                <button
+                                                    onClick={() => handleViewFactura(item)}
+                                                    className="p-1 text-purple-600 hover:bg-purple-100 rounded-full transition duration-150"
+                                                    title="Ver Factura Asociada"
+                                                >
+                                                    <FiFileText size={18} />
+                                                </button>
+                                            ) : (
+                                                <span
+                                                    className="p-1 text-gray-400 cursor-not-allowed"
+                                                    title="No hay factura asociada"
+                                                >
+                                                    <FiFileText size={18} />
+                                                </span>
+                                            )}
+                                        </div>
+                                    ),
                                     facturaInvoiceStatus: (val) => renderInvoiceStatusBadge(val as string | null),
+                                    unsubscriptionObservation: (val) => val || 'N/A',
+                                    observation: (val) => val || 'N/A',
                                 }}
-                                rowActions={(item) => ( // Re-introducido rowActions
+                                rowActions={(item) => (
                                     <div className="flex gap-2 justify-center items-center">
                                         <button
                                             onClick={() => handleEdit(item)}
@@ -401,23 +431,6 @@ export default function UnsubscriptionsPage() {
                                         >
                                             <FiEdit size={20} />
                                         </button>
-                                        {/* Botón para ver/descargar factura */}
-                                        {item.facturaId ? (
-                                            <button
-                                                onClick={() => handleViewFactura(item)}
-                                                className="p-2 text-purple-600 hover:bg-purple-100 rounded-full transition duration-150"
-                                                title="Ver Factura Asociada"
-                                            >
-                                                <FiFileText size={18} />
-                                            </button>
-                                        ) : (
-                                            <span
-                                                className="p-2 text-gray-400 cursor-not-allowed"
-                                                title="No hay factura asociada"
-                                            >
-                                                <FiFileText size={18} />
-                                            </span>
-                                        )}
                                     </div>
                                 )}
                             />
@@ -439,7 +452,6 @@ export default function UnsubscriptionsPage() {
                     unsubscriptionData={selectedClient}
                     refetch={refetch}
                 />
-
             </div>
         </>
     );

@@ -16,12 +16,11 @@ export interface UnsubscribedAffiliationData {
     eps: string | null; // Nombre de la EPS
     arl: string | null; // Nombre de la ARL
     risk: string | null;
-    ccf: string | null; // Nombre de la CCF
+    ccf: string | null; // Nombre de la CCF 
     pensionFund: string | null; // Nombre del Fondo de Pensión
     observation: string | null; // Observación de la afiliación original
     paid: PaymentStatus; // Estado de pago de la afiliación original (Ahora usa PaymentStatus)
     paymentMethodName: string | null; // Nombre del método de pago (Añadido para consistencia con CustomerManagementPage)
-    talonNumber: string | null; // Hago que sea nullable ya que a veces puede no existir
 
     // === Campos de Desafiliación / Historial ===
     deletedAt: string | null; // Fecha en que la afiliación fue marcada como inactiva (YYYY-MM-DD)
@@ -29,11 +28,11 @@ export interface UnsubscribedAffiliationData {
 
     unsubscriptionRecordId: number | null; // ID del registro en clients_unsubscriptions
 
-    unsubscriptionDate: string | null; // Fecha de la desafiliación del registro clients_unsubscriptions (YYYY-MM-DD)
+    unsubscriptionPaidDate: string | null; // Fecha de la desafiliación del registro clients_unsubscriptions (YYYY-MM-DD)
     unsubscriptionReason: string | null; // Razón de la desafiliación del registro clients_unsubscriptions
     unsubscriptionCost: number | null; // Costo asociado a la desafiliación del registro clients_unsubscriptions
     unsubscriptionObservation: string | null; // Observación específica del registro clients_unsubscriptions
-
+    unsubscriptionPaidStatus: PaymentStatus;
     // === Campos de Factura Asociada (ADICIÓN) ===
     facturaId: number | null; // ID de la factura asociada (si existe)
     facturaNumero: string | null; // Número de la factura (si existe)
