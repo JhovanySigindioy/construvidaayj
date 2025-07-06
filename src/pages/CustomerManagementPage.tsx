@@ -21,7 +21,6 @@ const allPossibleHeaders: (keyof DataClient)[] = [
     'paid',
     'paymentMethodName',
     'facturaNumero',
-    'facturaInvoiceStatus',
     'observation',
     'fullName',
     'identification',
@@ -433,7 +432,7 @@ export default function CustomerManagementPage() {
                     <>
                     
                         <div className="overflow-x-auto rounded-lg shadow-lg">
-                            <Table<DataClient>
+                a            <Table<DataClient>
                                 headers={visibleHeaders}
                                 data={paginatedData}
                                 idKey={"affiliationId"}

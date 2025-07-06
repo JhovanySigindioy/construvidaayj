@@ -1,3 +1,4 @@
+import { Button } from "@headlessui/react";
 import { TableProps } from "../interfaces/tableProps";
 import { useLocation } from "react-router-dom";
 
@@ -68,10 +69,18 @@ export default function Table<T extends Record<string, any>>({
                                     <td className="px-1 md:px-6 py-3 align-middle">{rowActions(row)}</td>
                                 )}
                                 {headers.map((header) => (
-                                    <td key={String(header)} className="px-1 md:px-6 py-3 align-middle">
-                                        {cellRenderers[header]
-                                            ? cellRenderers[header]!(row[header], row)
-                                            : String(row[header])}
+                                    <td
+                                        key={String(header)} className="px-1 md:px-6 py-3 align-middle">
+                                        {
+                                            cellRenderers[header]
+                                                ? cellRenderers[header]!(row[header], row)
+                                                :
+                                                (
+                                                    <span className={row[header] === null || row[header] === undefined ? 'p-1 bg-red-200 text-red-600 rounded-lg': ''}>
+                                                        {row[header] ?? 'N/A'}
+                                                    </span>
+                                                )
+                                        }
                                     </td>
                                 ))}
                             </tr>
