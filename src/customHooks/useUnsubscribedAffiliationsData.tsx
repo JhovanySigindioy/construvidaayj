@@ -54,8 +54,8 @@ export function useUnsubscribedAffiliationsData({ month, year }: UseUnsubscribed
                 userId: userId.toString(),
             });
 
-            const urlTest = `ENDPOINTAAAAAA: ${urlBase}/affiliations/history/inactive?${params.toString()}`;
-            console.log(urlTest);
+            // const urlTest = `ENDPOINTAAAAAA: ${urlBase}/affiliations/history/inactive?${params.toString()}`;
+            // console.log(urlTest);
             const response = await fetch(`${urlBase}/affiliations/history/inactive?${params.toString()}`, {
                 method: 'GET',
                 headers: {

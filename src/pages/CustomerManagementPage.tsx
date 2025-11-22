@@ -404,7 +404,7 @@ export default function CustomerManagementPage() {
                 </div>
                 <div className="flex justify-between items-center mb-4 gap-4">
                     <MonthYearSelector onChange={handleMonthYearChange} />
-                    
+
                     <button
                         onClick={openModalCreate}
                         className="sm:w-auto flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 transform hover:scale-105"
@@ -430,9 +430,9 @@ export default function CustomerManagementPage() {
                 {/* Tabla de datos y Paginación */}
                 {!isLoading && !error && filteredData.length > 0 && (
                     <>
-                    
+
                         <div className="overflow-x-auto rounded-lg shadow-lg">
-                a            <Table<DataClient>
+                            <Table<DataClient>
                                 headers={visibleHeaders}
                                 data={paginatedData}
                                 idKey={"affiliationId"}
@@ -440,7 +440,6 @@ export default function CustomerManagementPage() {
                                 cellRenderers={{
                                     paid: (value, item) => {
                                         const loading = loadingPaidIds.includes(item.affiliationId);
-
                                         return (
                                             <div className="relative">
                                                 <select
@@ -485,7 +484,7 @@ export default function CustomerManagementPage() {
                                                                             paid: updated.paid_status,
                                                                             datePaidReceived: updated.date_paid_received,
                                                                             govRegistryCompletedAt: updated.gov_record_completed_at,
-                                                                          }
+                                                                        }
                                                                         : p
                                                                 )
                                                             );
