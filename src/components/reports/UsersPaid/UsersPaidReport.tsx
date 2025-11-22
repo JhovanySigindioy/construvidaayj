@@ -7,6 +7,7 @@ import OldUsersTable from './OldUsersTable';
 
 // Mock de opciones de oficina. En una aplicación real, esto vendría de una API o un contexto global.
 const mockOfficeOptions = [
+    { id: 3, name: 'Juliana Perez' },
     { id: 2, name: 'Salud Proactiva' },
     { id: 1, name: 'Construvida AYJ' },
 ];
