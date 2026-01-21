@@ -10,7 +10,7 @@ export default function OfficeSelectPage() {
     const [offices, setOffices] = useState<Office[]>([]);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
-    const { user, setSelectedOfficeId } = useAuth(); 
+    const { user, setSelectedOfficeId } = useAuth();
     useEffect(() => {
         if (!user || !user.offices || user.offices.length === 0) {
             setError('No tienes oficinas asociadas.');
@@ -50,7 +50,7 @@ export default function OfficeSelectPage() {
             const data = await response.json();
 
             if (response.ok) {
-                
+
                 setTimeout(() => {
                     Swal.close();
                     navigate(`/customer_management`);
@@ -64,7 +64,7 @@ export default function OfficeSelectPage() {
             Swal.fire('Error', 'Error en la solicitud de afiliación.', 'error');
         }
     };
-
+    console.log("DATA DE LAS OFICINAS AJAJJAJAJJAJAJAJJAJAJA", offices);
     return (
         <div className="p-10 fade-in">
             <h1 className="text-3xl font-semibold text-center mb-6">Selecciona una Oficina</h1>
