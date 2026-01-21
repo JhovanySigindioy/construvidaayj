@@ -74,7 +74,7 @@ export function MonthlyReportChart() {
                     }
                 ]}
                 groupMode="stacked"
-                // 👇 Aquí añadimos un layer para mostrar el total arriba
+
                 layers={[
                     'grid',
                     'axes',

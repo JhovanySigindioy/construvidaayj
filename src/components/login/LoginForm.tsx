@@ -76,7 +76,7 @@ export default function LoginForm() {
             onChange={(e) => setEmail(e.target.value)}
             className="w-full pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-400"
             disabled={loading}
-        
+
           />
         </div>
         <div className="relative">
@@ -88,7 +88,7 @@ export default function LoginForm() {
             onChange={(e) => setPassword(e.target.value)}
             className="w-full pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-400"
             disabled={loading}
-      
+
           />
         </div>
         {error && <p className="text-red-500 text-sm">{error}</p>}
@@ -97,7 +97,7 @@ export default function LoginForm() {
           ? <LoadingButton label="Iniciando sesión..." />
           : (
             <button
-              type="submit" 
+              type="submit"
               className="w-full py-2 rounded-full bg-gradient-to-r from-emerald-400 to-sky-400 text-white font-semibold shadow-md hover:from-emerald-500 hover:to-sky-500 transition"
             >
               Iniciar Sesión
