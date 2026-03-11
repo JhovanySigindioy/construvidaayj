@@ -13,6 +13,7 @@ const mockOfficeOptions = [
     { id: 1, name: 'Construvida AYJ' },
 ];
 
+
 export default function UsersPaidReport() {
     const today = new Date();
     // Formatea la fecha actual a YYYY-MM-DD
